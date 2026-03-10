@@ -1,0 +1,29 @@
+import { Navigate, Route, Routes } from 'react-router-dom';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import FeedPage from './pages/FeedPage';
+import IdeasPage from './pages/IdeasPage';
+import FindPeoplePage from './pages/FindPeoplePage';
+import MessagesPage from './pages/MessagesPage';
+import ProfilePage from './pages/ProfilePage';
+import ProtectedRoute from './components/ProtectedRoute';
+import { useAuth } from './context/AuthContext';
+
+export default function App() {
+  const { token } = useAuth();
+
+  return (
+    <Routes>
+      <Route path="/login" element={!token ? <LoginPage /> : <Navigate to="/feed" replace />} />
+      <Route path="/register" element={!token ? <RegisterPage /> : <Navigate to="/feed" replace />} />
+      <Route element={<ProtectedRoute />}>
+        <Route path="/feed" element={<FeedPage />} />
+        <Route path="/ideas" element={<IdeasPage />} />
+        <Route path="/people" element={<FindPeoplePage />} />
+        <Route path="/messages" element={<MessagesPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+      </Route>
+      <Route path="*" element={<Navigate to={token ? '/feed' : '/login'} replace />} />
+    </Routes>
+  );
+}

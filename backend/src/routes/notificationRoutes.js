@@ -1,10 +1,10 @@
 import express from 'express';
 import Notification from '../models/Notification.js';
-import auth from '../middleware/auth.js';
+import protect from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.get('/', auth, async (req, res) => {
+router.get('/', protect, async (req, res) => {
   try {
     const notifications = await Notification.find({ user: req.user._id })
       .populate('relatedUser', 'name headline avatarUrl')
@@ -17,7 +17,7 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-router.get('/unread-count', auth, async (req, res) => {
+router.get('/unread-count', protect, async (req, res) => {
   try {
     const count = await Notification.countDocuments({
       user: req.user._id,
@@ -31,7 +31,7 @@ router.get('/unread-count', auth, async (req, res) => {
   }
 });
 
-router.patch('/:id/read', auth, async (req, res) => {
+router.patch('/:id/read', protect, async (req, res) => {
   try {
     const item = await Notification.findOneAndUpdate(
       { _id: req.params.id, user: req.user._id },
@@ -50,7 +50,7 @@ router.patch('/:id/read', auth, async (req, res) => {
   }
 });
 
-router.patch('/read-all/all', auth, async (req, res) => {
+router.patch('/read-all/all', protect, async (req, res) => {
   try {
     await Notification.updateMany(
       { user: req.user._id, isRead: false },

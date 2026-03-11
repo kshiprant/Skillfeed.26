@@ -4,6 +4,7 @@ import Message from '../models/Message.js';
 import Conversation from '../models/Conversation.js';
 import ConnectionRequest from '../models/ConnectionRequest.js';
 import Notification from '../models/Notification.js';
+import User from '../models/User.js';
 
 const router = express.Router();
 
@@ -78,7 +79,9 @@ router.get('/thread/:userId', protect, async (req, res) => {
     const connected = await areUsersConnected(me, otherUserId);
 
     if (!connected) {
-      return res.status(403).json({ message: 'You can only message accepted connections' });
+      return res
+        .status(403)
+        .json({ message: 'You can only message accepted connections' });
     }
 
     const conversation = await ensureConversation(me, otherUserId);
@@ -107,6 +110,7 @@ router.get('/thread/:userId', protect, async (req, res) => {
  */
 router.post('/', protect, async (req, res) => {
   try {
+    const io = req.app.get('io');
     const { text, toUser } = req.body;
 
     if (!toUser || String(toUser) === String(req.user._id)) {
@@ -120,7 +124,9 @@ router.post('/', protect, async (req, res) => {
     const connected = await areUsersConnected(req.user._id, toUser);
 
     if (!connected) {
-      return res.status(403).json({ message: 'You can only message accepted connections' });
+      return res
+        .status(403)
+        .json({ message: 'You can only message accepted connections' });
     }
 
     const conversation = await ensureConversation(req.user._id, toUser);
@@ -137,7 +143,7 @@ router.post('/', protect, async (req, res) => {
     conversation.lastMessageAt = new Date();
     await conversation.save();
 
-    await Notification.create({
+    const notification = await Notification.create({
       user: toUser,
       type: 'message',
       title: 'New message',
@@ -151,6 +157,47 @@ router.post('/', protect, async (req, res) => {
     const populatedMessage = await Message.findById(message._id)
       .populate('sender', 'name avatarUrl')
       .populate('receiver', 'name avatarUrl');
+
+    const senderUser = await User.findById(req.user._id).select(
+      '_id name headline avatarUrl'
+    );
+
+    const receiverUser = await User.findById(toUser).select(
+      '_id name headline avatarUrl'
+    );
+
+    if (io) {
+      io.to(`conversation:${conversation._id}`).emit('message:new', {
+        conversationId: conversation._id,
+        message: populatedMessage,
+      });
+
+      io.to(`user:${String(toUser)}`).emit('conversation:updated', {
+        _id: conversation._id,
+        user: senderUser,
+        lastMessage: conversation.lastMessage,
+        lastMessageAt: conversation.lastMessageAt,
+        updatedAt: conversation.updatedAt,
+      });
+
+      io.to(`user:${String(req.user._id)}`).emit('conversation:updated', {
+        _id: conversation._id,
+        user: receiverUser,
+        lastMessage: conversation.lastMessage,
+        lastMessageAt: conversation.lastMessageAt,
+        updatedAt: conversation.updatedAt,
+      });
+
+      io.to(`user:${String(toUser)}`).emit('notification:new', {
+        _id: notification._id,
+        type: notification.type,
+        title: notification.title,
+        message: notification.message,
+        relatedConversation: conversation._id,
+        relatedUser: senderUser,
+        createdAt: notification.createdAt,
+      });
+    }
 
     res.status(201).json({
       message: 'Message sent',

@@ -14,7 +14,14 @@ dotenv.config();
 connectDB();
 
 const app = express();
-app.use(cors({ origin: process.env.CLIENT_URL?.split(',') || '*', credentials: true }));
+
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',') : true,
+    credentials: true,
+  })
+);
+
 app.use(express.json({ limit: '2mb' }));
 app.use(morgan('dev'));
 

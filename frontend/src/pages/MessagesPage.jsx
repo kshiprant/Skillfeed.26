@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Layout from '../components/Layout';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import MessageShell from '../components/MessageShell';
+import { socket } from '../socket';
 
 export default function MessagesPage() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
@@ -13,6 +14,8 @@ export default function MessagesPage() {
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [error, setError] = useState('');
+
+  const joinedConversationRef = useRef(null);
 
   const loadConversations = async (preserveActiveId = null) => {
     try {
@@ -61,9 +64,51 @@ export default function MessagesPage() {
   }, []);
 
   useEffect(() => {
+    if (!token) return;
+
+    socket.auth = { token };
+
+    if (!socket.connected) {
+      socket.connect();
+    }
+
+    const handleMessageNew = ({ conversationId, message }) => {
+      if (String(activeConversation?._id) === String(conversationId)) {
+        setMessages((prev) => {
+          const alreadyExists = prev.some((item) => String(item._id) === String(message._id));
+          if (alreadyExists) return prev;
+          return [...prev, message];
+        });
+      }
+
+      loadConversations(activeConversation?._id || null);
+    };
+
+    const handleConversationUpdated = () => {
+      loadConversations(activeConversation?._id || null);
+    };
+
+    socket.on('message:new', handleMessageNew);
+    socket.on('conversation:updated', handleConversationUpdated);
+
+    return () => {
+      socket.off('message:new', handleMessageNew);
+      socket.off('conversation:updated', handleConversationUpdated);
+    };
+  }, [token, activeConversation?._id]);
+
+  useEffect(() => {
     const loadMessages = async () => {
       if (!activeConversation?.user?._id) {
         setMessages([]);
+
+        if (joinedConversationRef.current) {
+          socket.emit('leave_conversation', {
+            conversationId: joinedConversationRef.current,
+          });
+          joinedConversationRef.current = null;
+        }
+
         return;
       }
 
@@ -71,8 +116,27 @@ export default function MessagesPage() {
         setLoadingMessages(true);
         setError('');
 
-        const { data } = await api.get(`/messages/thread/${activeConversation.user._id}`);
-        setMessages(Array.isArray(data?.messages) ? data.messages : []);
+        const { data } = await api.get(
+          `/messages/thread/${activeConversation.user._id}`
+        );
+
+        const nextMessages = Array.isArray(data?.messages) ? data.messages : [];
+        setMessages(nextMessages);
+
+        const nextConversationId = data?.conversationId;
+
+        if (joinedConversationRef.current && joinedConversationRef.current !== nextConversationId) {
+          socket.emit('leave_conversation', {
+            conversationId: joinedConversationRef.current,
+          });
+        }
+
+        if (nextConversationId && socket.connected) {
+          socket.emit('join_conversation', {
+            conversationId: nextConversationId,
+          });
+          joinedConversationRef.current = nextConversationId;
+        }
       } catch (err) {
         console.error('Failed to load messages:', err);
         setError(err.response?.data?.message || 'Failed to load messages.');
@@ -83,7 +147,21 @@ export default function MessagesPage() {
     };
 
     loadMessages();
-  }, [activeConversation?._id]);
+
+    return () => {
+      // no-op here; handled when active conversation changes
+    };
+  }, [activeConversation?.user?._id]);
+
+  useEffect(() => {
+    return () => {
+      if (joinedConversationRef.current) {
+        socket.emit('leave_conversation', {
+          conversationId: joinedConversationRef.current,
+        });
+      }
+    };
+  }, []);
 
   const onSend = async (e) => {
     e.preventDefault();
@@ -102,11 +180,6 @@ export default function MessagesPage() {
       });
 
       e.currentTarget.reset();
-
-      const { data } = await api.get(`/messages/thread/${activeConversation.user._id}`);
-      setMessages(Array.isArray(data?.messages) ? data.messages : []);
-
-      await loadConversations(activeConversation._id);
     } catch (err) {
       console.error('Failed to send message:', err);
       setError(err.response?.data?.message || 'Failed to send message.');

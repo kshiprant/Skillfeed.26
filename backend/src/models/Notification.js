@@ -8,39 +8,56 @@ const notificationSchema = new mongoose.Schema(
       required: true,
     },
 
-    actor: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-
     type: {
       type: String,
-      enum: ['like', 'comment', 'join_request', 'join_accepted', 'join_rejected'],
+      enum: [
+        'connection_request',
+        'connection_accepted',
+        'connection_rejected',
+        'message',
+      ],
       required: true,
     },
 
-    idea: {
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    message: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    relatedUser: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Idea',
+      ref: 'User',
       default: null,
     },
 
-    joinRequest: {
+    relatedRequest: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'JoinRequest',
+      ref: 'ConnectionRequest',
       default: null,
     },
 
-    read: {
+    relatedConversation: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Conversation',
+      default: null,
+    },
+
+    relatedMessage: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Message',
+      default: null,
+    },
+
+    isRead: {
       type: Boolean,
       default: false,
-    },
-
-    text: {
-      type: String,
-      default: '',
-      trim: true,
     },
   },
   { timestamps: true }

@@ -436,6 +436,12 @@ textarea {
   padding: 14px;
   display: grid;
   gap: 10px;
+  transition: 0.2s ease;
+}
+
+.feed-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.09);
 }
 
 .feed-item h3 {
@@ -453,6 +459,118 @@ textarea {
 .feed-meta {
   color: var(--muted);
   font-size: 14px;
+}
+
+/* Improved idea post styling */
+
+.idea-card {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  transition: 0.2s ease;
+}
+
+.idea-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.09);
+}
+
+.idea-author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 16px;
+  flex-shrink: 0;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18);
+}
+
+.author-meta {
+  display: grid;
+  gap: 2px;
+}
+
+.author-meta strong {
+  font-size: 15px;
+  color: var(--text);
+}
+
+.author-meta span {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.idea-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.idea-description {
+  margin: 0;
+  color: #334155;
+  line-height: 1.65;
+  font-size: 16px;
+}
+
+.idea-stage {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 34px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.idea-card .tag-row {
+  margin-top: -2px;
+}
+
+.idea-card .muted {
+  font-size: 14px;
+}
+
+.comment-list {
+  display: grid;
+  gap: 10px;
+}
+
+.comment-item {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  padding: 12px 14px;
+  border-radius: 14px;
+  display: grid;
+  gap: 4px;
+}
+
+.comment-item strong {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.comment-item span {
+  color: #475569;
+  line-height: 1.5;
 }
 
 .profile-card {
@@ -578,7 +696,6 @@ textarea {
   .person-card,
   .idea-header,
   .request-row,
-  .inline-form,
   .chat-input-row,
   .section-head,
   .feed-item-top,
@@ -586,6 +703,25 @@ textarea {
   .profile-head-row {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .inline-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .idea-author {
+    align-items: center;
+  }
+
+  .idea-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .idea-actions > * {
+    width: 100%;
+    text-align: center;
   }
 
   .grid-cards,
@@ -633,4 +769,12 @@ textarea {
   .app-shell {
     padding-bottom: 100px;
   }
-}
+
+  .idea-title {
+    font-size: 18px;
+  }
+
+  .idea-description {
+    font-size: 15px;
+  }
+  }

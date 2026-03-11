@@ -2,23 +2,28 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Layout({ title, subtitle, children, right }) {
-  const { logout, user } = useAuth();
+  const { user } = useAuth();
 
   return (
     <div className="app-shell">
       <header className="topbar">
-        <div>
+        <div className="topbar-copy">
           <div className="brand">Skillfeed</div>
-          <h1>{title}</h1>
+          {title && <h1>{title}</h1>}
           {subtitle && <p>{subtitle}</p>}
         </div>
+
         <div className="top-actions">
-          <span className="user-pill">{user?.name}</span>
-          <button className="ghost-btn" onClick={logout}>Logout</button>
+          <NavLink to="/profile" className="user-pill">
+            {user?.name || 'Profile'}
+          </NavLink>
         </div>
       </header>
 
-      <main className="page-content">{right && <div className="page-right">{right}</div>}{children}</main>
+      <main className="page-content">
+        {right && <aside className="page-right">{right}</aside>}
+        {children}
+      </main>
 
       <nav className="bottom-nav">
         <NavLink to="/feed">Home</NavLink>

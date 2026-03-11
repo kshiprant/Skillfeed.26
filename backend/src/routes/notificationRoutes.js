@@ -1,17 +1,67 @@
 import express from 'express';
-import protect from '../middleware/authMiddleware.js';
-
-import {
-  getNotifications,
-  markNotificationsRead,
-} from '../controllers/notificationController.js';
+import Notification from '../models/Notification.js';
+import auth from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.use(protect);
+router.get('/', auth, async (req, res) => {
+  try {
+    const notifications = await Notification.find({ user: req.user._id })
+      .populate('relatedUser', 'name headline avatarUrl')
+      .sort({ createdAt: -1 });
 
-router.get('/', getNotifications);
+    res.json(notifications);
+  } catch (error) {
+    console.error('get notifications error:', error);
+    res.status(500).json({ message: 'Failed to fetch notifications' });
+  }
+});
 
-router.put('/read', markNotificationsRead);
+router.get('/unread-count', auth, async (req, res) => {
+  try {
+    const count = await Notification.countDocuments({
+      user: req.user._id,
+      isRead: false,
+    });
+
+    res.json({ count });
+  } catch (error) {
+    console.error('unread count error:', error);
+    res.status(500).json({ message: 'Failed to fetch unread count' });
+  }
+});
+
+router.patch('/:id/read', auth, async (req, res) => {
+  try {
+    const item = await Notification.findOneAndUpdate(
+      { _id: req.params.id, user: req.user._id },
+      { isRead: true },
+      { new: true }
+    );
+
+    if (!item) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+
+    res.json(item);
+  } catch (error) {
+    console.error('mark read error:', error);
+    res.status(500).json({ message: 'Failed to update notification' });
+  }
+});
+
+router.patch('/read-all/all', auth, async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { user: req.user._id, isRead: false },
+      { isRead: true }
+    );
+
+    res.json({ message: 'All notifications marked as read' });
+  } catch (error) {
+    console.error('mark all read error:', error);
+    res.status(500).json({ message: 'Failed to update notifications' });
+  }
+});
 
 export default router;

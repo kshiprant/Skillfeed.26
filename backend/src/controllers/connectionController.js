@@ -1,6 +1,7 @@
 import ConnectionRequest from '../models/ConnectionRequest.js';
 import Conversation from '../models/Conversation.js';
 import Notification from '../models/Notification.js';
+import User from '../models/User.js';
 
 const ensureConversation = async (userA, userB) => {
   const existing = await Conversation.findOne({
@@ -21,7 +22,7 @@ const createNotification = async ({
   relatedRequest = null,
   relatedConversation = null,
 }) => {
-  await Notification.create({
+  return Notification.create({
     user,
     type,
     title,
@@ -35,6 +36,7 @@ const createNotification = async ({
 
 export const sendConnectionRequest = async (req, res) => {
   try {
+    const io = req.app.get('io');
     const toUser = req.body.toUser;
 
     if (!toUser || String(toUser) === String(req.user._id)) {
@@ -71,7 +73,14 @@ export const sendConnectionRequest = async (req, res) => {
 
         const conversation = await ensureConversation(req.user._id, toUser);
 
-        await createNotification({
+        const currentUser = await User.findById(req.user._id).select(
+          '_id name headline avatarUrl'
+        );
+        const targetUser = await User.findById(toUser).select(
+          '_id name headline avatarUrl'
+        );
+
+        const acceptedForTarget = await createNotification({
           user: toUser,
           type: 'connection_accepted',
           title: 'Connection accepted',
@@ -81,7 +90,7 @@ export const sendConnectionRequest = async (req, res) => {
           relatedConversation: conversation._id,
         });
 
-        await createNotification({
+        const acceptedForMe = await createNotification({
           user: req.user._id,
           type: 'connection_accepted',
           title: 'Connection accepted',
@@ -91,6 +100,44 @@ export const sendConnectionRequest = async (req, res) => {
           relatedConversation: conversation._id,
         });
 
+        if (io) {
+          io.to(`user:${String(toUser)}`).emit('notification:new', {
+            _id: acceptedForTarget._id,
+            type: acceptedForTarget.type,
+            title: acceptedForTarget.title,
+            message: acceptedForTarget.message,
+            relatedUser: currentUser,
+            relatedConversation: conversation._id,
+            createdAt: acceptedForTarget.createdAt,
+          });
+
+          io.to(`user:${String(req.user._id)}`).emit('notification:new', {
+            _id: acceptedForMe._id,
+            type: acceptedForMe.type,
+            title: acceptedForMe.title,
+            message: acceptedForMe.message,
+            relatedUser: targetUser,
+            relatedConversation: conversation._id,
+            createdAt: acceptedForMe.createdAt,
+          });
+
+          io.to(`user:${String(toUser)}`).emit('conversation:updated', {
+            _id: conversation._id,
+            user: currentUser,
+            lastMessage: conversation.lastMessage || '',
+            lastMessageAt: conversation.lastMessageAt || null,
+            updatedAt: conversation.updatedAt,
+          });
+
+          io.to(`user:${String(req.user._id)}`).emit('conversation:updated', {
+            _id: conversation._id,
+            user: targetUser,
+            lastMessage: conversation.lastMessage || '',
+            lastMessageAt: conversation.lastMessageAt || null,
+            updatedAt: conversation.updatedAt,
+          });
+        }
+
         return res.json({
           message: 'Connection accepted automatically',
           request: existingAnyDirection,
@@ -99,7 +146,9 @@ export const sendConnectionRequest = async (req, res) => {
       }
 
       if (existingAnyDirection.status === 'rejected') {
-        return res.status(400).json({ message: 'A request already existed and was rejected' });
+        return res
+          .status(400)
+          .json({ message: 'A request already existed and was rejected' });
       }
     }
 
@@ -109,14 +158,30 @@ export const sendConnectionRequest = async (req, res) => {
       status: 'pending',
     });
 
-    await createNotification({
+    const senderUser = await User.findById(req.user._id).select(
+      '_id name headline avatarUrl'
+    );
+
+    const notification = await createNotification({
       user: toUser,
       type: 'connection_request',
       title: 'New connection request',
-      message: 'Someone sent you a connection request.',
+      message: `${senderUser?.name || 'Someone'} sent you a connection request.`,
       relatedUser: req.user._id,
       relatedRequest: request._id,
     });
+
+    if (io) {
+      io.to(`user:${String(toUser)}`).emit('notification:new', {
+        _id: notification._id,
+        type: notification.type,
+        title: notification.title,
+        message: notification.message,
+        relatedUser: senderUser,
+        relatedRequest: request._id,
+        createdAt: notification.createdAt,
+      });
+    }
 
     res.status(201).json(request);
   } catch (error) {
@@ -157,7 +222,9 @@ export const getPendingRequests = async (req, res) => {
         _id: item._id,
         user: otherUser,
         connectedAt: item.updatedAt,
-        conversationHint: [String(item.fromUser._id), String(item.toUser._id)].sort().join('_'),
+        conversationHint: [String(item.fromUser._id), String(item.toUser._id)]
+          .sort()
+          .join('_'),
       };
     });
 
@@ -170,6 +237,7 @@ export const getPendingRequests = async (req, res) => {
 
 export const actOnRequest = async (req, res) => {
   try {
+    const io = req.app.get('io');
     const { status } = req.body;
 
     if (!['accepted', 'rejected'].includes(status)) {
@@ -185,12 +253,19 @@ export const actOnRequest = async (req, res) => {
     request.status = status;
     await request.save();
 
+    const fromUser = await User.findById(request.fromUser).select(
+      '_id name headline avatarUrl'
+    );
+    const toUser = await User.findById(request.toUser).select(
+      '_id name headline avatarUrl'
+    );
+
     let conversation = null;
 
     if (status === 'accepted') {
       conversation = await ensureConversation(request.fromUser, request.toUser);
 
-      await createNotification({
+      const notification = await createNotification({
         user: request.fromUser,
         type: 'connection_accepted',
         title: 'Connection accepted',
@@ -199,10 +274,38 @@ export const actOnRequest = async (req, res) => {
         relatedRequest: request._id,
         relatedConversation: conversation._id,
       });
+
+      if (io) {
+        io.to(`user:${String(request.fromUser)}`).emit('notification:new', {
+          _id: notification._id,
+          type: notification.type,
+          title: notification.title,
+          message: notification.message,
+          relatedUser: toUser,
+          relatedConversation: conversation._id,
+          createdAt: notification.createdAt,
+        });
+
+        io.to(`user:${String(request.fromUser)}`).emit('conversation:updated', {
+          _id: conversation._id,
+          user: toUser,
+          lastMessage: conversation.lastMessage || '',
+          lastMessageAt: conversation.lastMessageAt || null,
+          updatedAt: conversation.updatedAt,
+        });
+
+        io.to(`user:${String(request.toUser)}`).emit('conversation:updated', {
+          _id: conversation._id,
+          user: fromUser,
+          lastMessage: conversation.lastMessage || '',
+          lastMessageAt: conversation.lastMessageAt || null,
+          updatedAt: conversation.updatedAt,
+        });
+      }
     }
 
     if (status === 'rejected') {
-      await createNotification({
+      const notification = await createNotification({
         user: request.fromUser,
         type: 'connection_rejected',
         title: 'Connection request declined',
@@ -210,6 +313,18 @@ export const actOnRequest = async (req, res) => {
         relatedUser: request.toUser,
         relatedRequest: request._id,
       });
+
+      if (io) {
+        io.to(`user:${String(request.fromUser)}`).emit('notification:new', {
+          _id: notification._id,
+          type: notification.type,
+          title: notification.title,
+          message: notification.message,
+          relatedUser: toUser,
+          relatedRequest: request._id,
+          createdAt: notification.createdAt,
+        });
+      }
     }
 
     res.json({

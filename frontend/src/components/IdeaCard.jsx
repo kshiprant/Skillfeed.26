@@ -26,16 +26,27 @@ export default function IdeaCard({
   const description = idea?.description || 'No description added yet.';
   const tags = Array.isArray(idea?.tags) ? idea.tags : [];
   const comments = Array.isArray(idea?.comments) ? idea.comments : [];
-  const likes = Array.isArray(idea?.likes) ? idea.likes : [];
   const joinRequestsCount = idea?.joinRequestsCount || 0;
 
+  const likeCount = Array.isArray(idea?.likes)
+    ? idea.likes.length
+    : typeof idea?.likes === 'number'
+    ? idea.likes
+    : 0;
+
   const liked = useMemo(() => {
-    return likes.some((like) => {
-      if (typeof like === 'string') return String(like) === String(userId);
-      if (like?._id) return String(like._id) === String(userId);
-      return false;
-    });
-  }, [likes, userId]);
+    if (typeof idea?.liked === 'boolean') return idea.liked;
+
+    if (Array.isArray(idea?.likes)) {
+      return idea.likes.some((like) => {
+        if (typeof like === 'string') return String(like) === String(userId);
+        if (like?._id) return String(like._id) === String(userId);
+        return false;
+      });
+    }
+
+    return false;
+  }, [idea?.liked, idea?.likes, userId]);
 
   const handleLike = () => {
     if (!safeId) return;
@@ -89,8 +100,8 @@ export default function IdeaCard({
       <div className="idea-stage">{idea?.stage || 'Idea'}</div>
 
       <div className="idea-stats">
-        <span>❤️ {likes.length} Likes</span>
-        <span>💬 {comments.length} Comments</span>
+        <span>❤️ {likeCount} {likeCount === 1 ? 'Like' : 'Likes'}</span>
+        <span>💬 {comments.length} {comments.length === 1 ? 'Comment' : 'Comments'}</span>
         <span>🚀 {joinRequestsCount} Join Requests</span>
       </div>
 
@@ -150,4 +161,4 @@ export default function IdeaCard({
       </div>
     </article>
   );
-}
+          }

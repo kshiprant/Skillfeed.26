@@ -91,8 +91,20 @@ export default function IdeasPage() {
 
   const likeIdea = async (id) => {
     try {
-      await api.post(`/ideas/${id}/like`);
-      loadIdeas();
+      const { data } = await api.post(`/ideas/${id}/like`);
+
+      setIdeas((prev) =>
+        prev.map((idea) =>
+          String(idea._id || idea.id) === String(id)
+            ? {
+                ...idea,
+                likes: data.likes,
+                liked: data.liked,
+                score: data.score,
+              }
+            : idea
+        )
+      );
     } catch (err) {
       console.error('Failed to like idea:', err);
     }
@@ -258,7 +270,9 @@ export default function IdeasPage() {
         </form>
       )}
 
-      {!joinIdea && joinMessage && <div className="success-box">{joinMessage}</div>}
+      {!joinIdea && joinMessage && (
+        <div className="success-box">{joinMessage}</div>
+      )}
 
       <section className="stack-list">
         {loading ? (
@@ -283,4 +297,4 @@ export default function IdeasPage() {
       </section>
     </Layout>
   );
-        }
+}

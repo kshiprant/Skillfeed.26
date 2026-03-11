@@ -271,7 +271,6 @@ textarea {
 .person-card,
 .request-row,
 .idea-header,
-.idea-actions,
 .inline-form,
 .row-actions,
 .feed-item-top,
@@ -541,6 +540,31 @@ textarea {
   font-weight: 700;
 }
 
+.idea-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 14px;
+  color: var(--muted);
+  padding-top: 4px;
+  padding-bottom: 2px;
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  padding: 10px 0;
+}
+
+.idea-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.idea-actions .ghost-btn,
+.idea-actions .primary-btn {
+  flex: 1;
+}
+
 .idea-card .tag-row {
   margin-top: -2px;
 }
@@ -622,6 +646,18 @@ textarea {
   justify-content: space-between;
   gap: 12px;
 }
+
+/* Join request card polish */
+
+.join-request-card h3 {
+  margin: 0 0 4px;
+}
+
+.join-request-card p {
+  margin: 0;
+}
+
+/* Profile */
 
 .profile-card {
   padding: 18px;
@@ -709,6 +745,8 @@ textarea {
   margin: 0 0 4px;
 }
 
+/* Bottom nav */
+
 .bottom-nav {
   position: fixed;
   left: 12px;
@@ -772,6 +810,12 @@ textarea {
   .idea-actions > * {
     width: 100%;
     text-align: center;
+  }
+
+  .idea-stats {
+    gap: 10px;
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .composer-grid {
@@ -842,4 +886,4 @@ textarea {
   .idea-description {
     font-size: 15px;
   }
-}
+  }

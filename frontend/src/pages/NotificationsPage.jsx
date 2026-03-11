@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import api from '../api/client';
+import { useAuth } from '../context/AuthContext';
+import { socket } from '../socket';
 
 export default function NotificationsPage() {
+  const { token } = useAuth();
+
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -25,6 +29,30 @@ export default function NotificationsPage() {
   useEffect(() => {
     loadNotifications();
   }, []);
+
+  useEffect(() => {
+    if (!token) return;
+
+    socket.auth = { token };
+
+    if (!socket.connected) {
+      socket.connect();
+    }
+
+    const handleNewNotification = (notification) => {
+      setNotifications((prev) => {
+        const exists = prev.some((item) => String(item._id) === String(notification._id));
+        if (exists) return prev;
+        return [notification, ...prev];
+      });
+    };
+
+    socket.on('notification:new', handleNewNotification);
+
+    return () => {
+      socket.off('notification:new', handleNewNotification);
+    };
+  }, [token]);
 
   return (
     <Layout

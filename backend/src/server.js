@@ -12,8 +12,7 @@ import ideaRoutes from './routes/ideaRoutes.js';
 
 import joinRequestRoutes from './routes/joinRequestRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
-
-// import messageRoutes from './routes/messageRoutes.js';
+import messageRoutes from './routes/messageRoutes.js';
 
 import { errorHandler, notFound } from './middleware/errorMiddleware.js';
 
@@ -59,8 +58,9 @@ app.use('/api/ideas', ideaRoutes);
 app.use('/api/join-requests', joinRequestRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-/* Optional Messaging */
-// app.use('/api/messages', messageRoutes);
+/* Messaging */
+
+app.use('/api/messages', messageRoutes);
 
 /* Error Handling */
 

@@ -25,14 +25,48 @@ export default function LoginPage() {
   };
 
   return (
-    <AuthCard title="Welcome back" subtitle="Build teams, share ideas, and message your collaborators.">
+    <AuthCard
+      title="Welcome back"
+      subtitle="Build teams, share ideas, and message your collaborators."
+    >
       <form className="stack-form" onSubmit={submit}>
-        <input placeholder="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-        <input placeholder="Password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+        <input
+          placeholder="Email"
+          type="email"
+          value={form.email}
+          onChange={(e) => setForm({ ...form, email: e.target.value })}
+        />
+
+        <input
+          placeholder="Password"
+          type="password"
+          value={form.password}
+          onChange={(e) => setForm({ ...form, password: e.target.value })}
+        />
+
         {error && <div className="error-box">{error}</div>}
-        <button className="primary-btn" type="submit" disabled={loading}>{loading ? 'Logging in...' : 'Login'}</button>
+
+        <button className="primary-btn" type="submit" disabled={loading}>
+          {loading ? 'Logging in...' : 'Login'}
+        </button>
       </form>
-      <div className="auth-footer">No account? <Link to="/register">Create one</Link></div>
+
+      <div className="auth-footer">
+        No account? <Link to="/register">Create one</Link>
+      </div>
+
+      {/* Developer Credit */}
+      <div
+        className="auth-footer"
+        style={{
+          textAlign: "center",
+          marginTop: "10px",
+          opacity: 0.7,
+          fontSize: "13px"
+        }}
+      >
+        Developed by <strong>Kshiprant</strong>
+      </div>
     </AuthCard>
   );
 }

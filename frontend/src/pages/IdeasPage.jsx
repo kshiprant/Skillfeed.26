@@ -102,37 +102,49 @@ export default function IdeasPage() {
       title="Startup ideas"
       subtitle="Post what you want to build and discover collaborators."
     >
-      <form className="card stack-form" onSubmit={createIdea}>
-        <h3>Post new idea</h3>
+      <form className="card idea-composer" onSubmit={createIdea}>
+        <div className="idea-composer-head">
+          <div className="composer-avatar">
+            {(user?.name || 'U').charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <h3>Share an idea</h3>
+            <p className="muted">
+              Post what you want to build and attract the right collaborators.
+            </p>
+          </div>
+        </div>
 
         <input
-          placeholder="Title"
+          placeholder="Give your idea a strong title"
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
         />
 
         <textarea
-          placeholder="Describe your idea"
-          rows="4"
+          placeholder="Describe the problem, your solution, and why it matters..."
+          rows="5"
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
         />
 
-        <select
-          value={form.stage}
-          onChange={(e) => setForm({ ...form, stage: e.target.value })}
-        >
-          <option>Idea</option>
-          <option>MVP</option>
-          <option>Early Traction</option>
-          <option>Scaling</option>
-        </select>
+        <div className="composer-grid">
+          <select
+            value={form.stage}
+            onChange={(e) => setForm({ ...form, stage: e.target.value })}
+          >
+            <option>Idea</option>
+            <option>MVP</option>
+            <option>Early Traction</option>
+            <option>Scaling</option>
+          </select>
 
-        <input
-          placeholder="Tags, comma separated"
-          value={form.tags}
-          onChange={(e) => setForm({ ...form, tags: e.target.value })}
-        />
+          <input
+            placeholder="Tags, comma separated"
+            value={form.tags}
+            onChange={(e) => setForm({ ...form, tags: e.target.value })}
+          />
+        </div>
 
         <input
           placeholder="Looking for, comma separated"
@@ -142,9 +154,12 @@ export default function IdeasPage() {
 
         {error && <div className="error-box">{error}</div>}
 
-        <button className="primary-btn" type="submit" disabled={posting}>
-          {posting ? 'Posting...' : 'Post Idea'}
-        </button>
+        <div className="composer-actions">
+          <span className="muted">Tip: mention the role or skill you need.</span>
+          <button className="primary-btn" type="submit" disabled={posting}>
+            {posting ? 'Posting...' : 'Post Idea'}
+          </button>
+        </div>
       </form>
 
       <section className="stack-list">

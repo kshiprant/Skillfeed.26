@@ -1,39 +1,106 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 export default function IdeaCard({ idea, onLike, onComment, userId }) {
   const [comment, setComment] = useState('');
-  const liked = idea.likes?.some((id) => String(id) === String(userId));
+  const [sending, setSending] = useState(false);
+
+  const safeId = idea?._id || idea?.id;
+
+  const liked = useMemo(() => {
+    if (!Array.isArray(idea?.likes)) return false;
+    return idea.likes.some((like) => {
+      if (typeof like === 'string') return String(like) === String(userId);
+      if (like?._id) return String(like._id) === String(userId);
+      return false;
+    });
+  }, [idea?.likes, userId]);
+
+  const authorName =
+    idea?.user?.name || idea?.author?.name || idea?.createdBy?.name || 'Anonymous';
+
+  const authorHeadline =
+    idea?.user?.headline ||
+    idea?.author?.headline ||
+    idea?.createdBy?.headline ||
+    'Member';
+
+  const title = idea?.title || 'Untitled idea';
+  const description = idea?.description || 'No description added yet.';
+  const tags = Array.isArray(idea?.tags) ? idea.tags : [];
+  const lookingFor = Array.isArray(idea?.lookingFor) ? idea.lookingFor : [];
+  const comments = Array.isArray(idea?.comments) ? idea.comments : [];
+  const likesCount = Array.isArray(idea?.likes) ? idea.likes.length : 0;
+
+  const handleComment = async () => {
+    if (!comment.trim() || !safeId) return;
+
+    try {
+      setSending(true);
+      await onComment(safeId, comment.trim());
+      setComment('');
+    } catch (error) {
+      console.error('Failed to send comment:', error);
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <article className="card idea-card">
       <div className="idea-header">
         <div>
-          <h3>{idea.title}</h3>
-          <p>{idea.user?.name} · {idea.user?.headline || 'Member'}</p>
+          <h3>{title}</h3>
+          <p className="muted">
+            {authorName} · {authorHeadline}
+          </p>
         </div>
-        <span className="chip">{idea.stage}</span>
+        <span className="chip">{idea?.stage || 'Idea'}</span>
       </div>
-      <p className="body-text">{idea.description}</p>
-      <div className="tag-row">
-        {(idea.tags || []).map((tag) => <span key={tag} className="tag">#{tag}</span>)}
-      </div>
-      {!!idea.lookingFor?.length && (
-        <p className="muted">Looking for: {idea.lookingFor.join(', ')}</p>
+
+      <p className="body-text">{description}</p>
+
+      {tags.length > 0 && (
+        <div className="tag-row">
+          {tags.map((tag, index) => (
+            <span key={`${tag}-${index}`} className="tag">
+              #{tag}
+            </span>
+          ))}
+        </div>
       )}
+
+      {lookingFor.length > 0 && (
+        <p className="muted">
+          Looking for: {lookingFor.join(', ')}
+        </p>
+      )}
+
       <div className="idea-actions">
-        <button className="ghost-btn" onClick={() => onLike(idea._id)}>{liked ? 'Unlike' : 'Like'} ({idea.likes?.length || 0})</button>
+        <button className="ghost-btn" type="button" onClick={() => onLike(safeId)}>
+          {liked ? 'Unlike' : 'Like'} ({likesCount})
+        </button>
       </div>
-      <div className="comment-list">
-        {(idea.comments || []).map((item) => (
-          <div key={item._id} className="comment-item">
-            <strong>{item.user?.name}</strong>
-            <span>{item.comment}</span>
-          </div>
-        ))}
-      </div>
+
+      {comments.length > 0 && (
+        <div className="comment-list">
+          {comments.map((item, index) => (
+            <div key={item?._id || `${item?.comment}-${index}`} className="comment-item">
+              <strong>{item?.user?.name || 'User'}</strong>
+              <span>{item?.comment || ''}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="inline-form">
-        <input value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Add a comment" />
-        <button onClick={() => { if (comment.trim()) { onComment(idea._id, comment.trim()); setComment(''); } }}>Send</button>
+        <input
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          placeholder="Add a comment"
+        />
+        <button type="button" className="primary-btn" onClick={handleComment} disabled={sending}>
+          {sending ? 'Sending...' : 'Send'}
+        </button>
       </div>
     </article>
   );

@@ -1,6 +1,12 @@
 import { useMemo, useState } from 'react';
 
-export default function IdeaCard({ idea, onLike, onComment, userId }) {
+export default function IdeaCard({
+  idea,
+  onLike,
+  onComment,
+  onJoin,
+  userId,
+}) {
   const [comment, setComment] = useState('');
   const [sending, setSending] = useState(false);
 
@@ -21,6 +27,7 @@ export default function IdeaCard({ idea, onLike, onComment, userId }) {
   const tags = Array.isArray(idea?.tags) ? idea.tags : [];
   const comments = Array.isArray(idea?.comments) ? idea.comments : [];
   const likes = Array.isArray(idea?.likes) ? idea.likes : [];
+  const joinRequestsCount = idea?.joinRequestsCount || 0;
 
   const liked = useMemo(() => {
     return likes.some((like) => {
@@ -32,7 +39,7 @@ export default function IdeaCard({ idea, onLike, onComment, userId }) {
 
   const handleLike = () => {
     if (!safeId) return;
-    onLike(safeId);
+    onLike?.(safeId);
   };
 
   const handleComment = async () => {
@@ -40,13 +47,18 @@ export default function IdeaCard({ idea, onLike, onComment, userId }) {
 
     try {
       setSending(true);
-      await onComment(safeId, comment.trim());
+      await onComment?.(safeId, comment.trim());
       setComment('');
     } catch (error) {
       console.error('Failed to send comment:', error);
     } finally {
       setSending(false);
     }
+  };
+
+  const handleJoin = () => {
+    if (!safeId || !onJoin) return;
+    onJoin(safeId, idea);
   };
 
   return (
@@ -76,12 +88,36 @@ export default function IdeaCard({ idea, onLike, onComment, userId }) {
 
       <div className="idea-stage">{idea?.stage || 'Idea'}</div>
 
+      <div className="idea-stats">
+        <span>❤️ {likes.length} Likes</span>
+        <span>💬 {comments.length} Comments</span>
+        <span>🚀 {joinRequestsCount} Join Requests</span>
+      </div>
+
       <div className="idea-actions">
         <button className="ghost-btn" type="button" onClick={handleLike}>
-          {liked ? 'Unlike' : 'Like'} ({likes.length})
+          {liked ? 'Unlike' : 'Like'}
         </button>
 
-        <span className="muted">{comments.length} comments</span>
+        <button
+          className="ghost-btn"
+          type="button"
+          onClick={() => {
+            const input = document.getElementById(`comment-input-${safeId}`);
+            input?.focus();
+          }}
+        >
+          Comment
+        </button>
+
+        <button
+          className="primary-btn"
+          type="button"
+          onClick={handleJoin}
+          disabled={!onJoin}
+        >
+          Join Project
+        </button>
       </div>
 
       {comments.length > 0 && (
@@ -97,6 +133,7 @@ export default function IdeaCard({ idea, onLike, onComment, userId }) {
 
       <div className="inline-form">
         <input
+          id={`comment-input-${safeId}`}
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           placeholder="Write a comment..."

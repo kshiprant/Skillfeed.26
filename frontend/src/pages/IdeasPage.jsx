@@ -12,6 +12,11 @@ const initialForm = {
   lookingFor: '',
 };
 
+const initialJoinForm = {
+  roleRequested: '',
+  message: '',
+};
+
 export default function IdeasPage() {
   const { user } = useAuth();
   const [ideas, setIdeas] = useState([]);
@@ -19,6 +24,11 @@ export default function IdeasPage() {
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState('');
+
+  const [joinIdea, setJoinIdea] = useState(null);
+  const [joinForm, setJoinForm] = useState(initialJoinForm);
+  const [joining, setJoining] = useState(false);
+  const [joinMessage, setJoinMessage] = useState('');
 
   const loadIdeas = async () => {
     try {
@@ -97,6 +107,46 @@ export default function IdeasPage() {
     }
   };
 
+  const openJoinRequest = (ideaId, idea) => {
+    if (idea?.user?._id && String(idea.user._id) === String(user?._id)) {
+      setJoinMessage('You cannot join your own project.');
+      setTimeout(() => setJoinMessage(''), 2500);
+      return;
+    }
+
+    setJoinIdea({ id: ideaId, title: idea?.title || 'this project' });
+    setJoinForm(initialJoinForm);
+    setJoinMessage('');
+  };
+
+  const submitJoinRequest = async (e) => {
+    e.preventDefault();
+
+    if (!joinIdea?.id) return;
+
+    try {
+      setJoining(true);
+      setJoinMessage('');
+
+      await api.post(`/join-requests/${joinIdea.id}`, {
+        roleRequested: joinForm.roleRequested.trim(),
+        message: joinForm.message.trim(),
+      });
+
+      setJoinMessage('Join request sent successfully.');
+      setJoinIdea(null);
+      setJoinForm(initialJoinForm);
+      loadIdeas();
+    } catch (err) {
+      console.error('Failed to send join request:', err);
+      setJoinMessage(
+        err.response?.data?.message || 'Could not send join request.'
+      );
+    } finally {
+      setJoining(false);
+    }
+  };
+
   return (
     <Layout
       title="Startup ideas"
@@ -162,6 +212,54 @@ export default function IdeasPage() {
         </div>
       </form>
 
+      {joinIdea && (
+        <form className="card stack-form" onSubmit={submitJoinRequest}>
+          <h3>Join project</h3>
+          <p className="muted">
+            Send a request to join <strong>{joinIdea.title}</strong>.
+          </p>
+
+          <input
+            placeholder="Role you can contribute in"
+            value={joinForm.roleRequested}
+            onChange={(e) =>
+              setJoinForm({ ...joinForm, roleRequested: e.target.value })
+            }
+          />
+
+          <textarea
+            rows="4"
+            placeholder="Why should the founder choose you?"
+            value={joinForm.message}
+            onChange={(e) =>
+              setJoinForm({ ...joinForm, message: e.target.value })
+            }
+          />
+
+          {joinMessage && <div className="success-box">{joinMessage}</div>}
+
+          <div className="composer-actions">
+            <button
+              type="button"
+              className="ghost-btn"
+              onClick={() => {
+                setJoinIdea(null);
+                setJoinForm(initialJoinForm);
+                setJoinMessage('');
+              }}
+            >
+              Cancel
+            </button>
+
+            <button className="primary-btn" type="submit" disabled={joining}>
+              {joining ? 'Sending...' : 'Send Join Request'}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {!joinIdea && joinMessage && <div className="success-box">{joinMessage}</div>}
+
       <section className="stack-list">
         {loading ? (
           <div className="card empty-state">Loading ideas...</div>
@@ -177,6 +275,7 @@ export default function IdeasPage() {
               idea={idea}
               onLike={likeIdea}
               onComment={addComment}
+              onJoin={openJoinRequest}
               userId={user?._id}
             />
           ))
@@ -184,4 +283,4 @@ export default function IdeasPage() {
       </section>
     </Layout>
   );
-}
+        }

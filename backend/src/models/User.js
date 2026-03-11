@@ -3,19 +3,74 @@ import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, trim: true },
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true, minlength: 6 },
-    headline: { type: String, default: '' },
-    bio: { type: String, default: '' },
-    skills: [{ type: String }],
-    city: { type: String, default: '' },
-    avatarUrl: { type: String, default: '' },
-    role: { type: String, default: 'Member' },
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+
+    password: {
+      type: String,
+      required: true,
+      minlength: 6,
+    },
+
+    headline: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+
+    bio: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+
+    skills: [{ type: String, trim: true }],
+
+    city: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+
+    avatarUrl: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+
+    role: {
+      type: String,
+      default: 'Member',
+      trim: true,
+    },
+
     links: {
-      instagram: { type: String, default: '' },
-      linkedin: { type: String, default: '' },
-      portfolio: { type: String, default: '' },
+      instagram: { type: String, default: '', trim: true },
+      linkedin: { type: String, default: '', trim: true },
+      portfolio: { type: String, default: '', trim: true },
+    },
+
+    interests: [{ type: String, trim: true }],
+
+    openToCollaborate: {
+      type: Boolean,
+      default: true,
+    },
+
+    profileScore: {
+      type: Number,
+      default: 0,
     },
   },
   { timestamps: true }
@@ -23,6 +78,7 @@ const userSchema = new mongoose.Schema(
 
 userSchema.pre('save', async function save(next) {
   if (!this.isModified('password')) return next();
+
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();

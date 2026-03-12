@@ -1,10 +1,12 @@
 {
   "name": "Skillfeed",
   "short_name": "Skillfeed",
+  "description": "Skillfeed helps people discover ideas, connect with collaborators, and build projects together.",
   "start_url": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0b1220",
-  "theme_color": "#0b1220",
+  "theme_color": "#2563eb",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -14,7 +16,8 @@
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

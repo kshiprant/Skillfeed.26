@@ -1,3 +1,5 @@
+import { validationResult } from 'express-validator';
+import mongoose from 'mongoose';
 import ConnectionRequest from '../models/ConnectionRequest.js';
 import Conversation from '../models/Conversation.js';
 import Notification from '../models/Notification.js';
@@ -10,7 +12,11 @@ const ensureConversation = async (userA, userB) => {
 
   if (existing) return existing;
 
-  return Conversation.create({ members: [userA, userB] });
+  return Conversation.create({
+    members: [userA, userB],
+    lastMessage: '',
+    lastMessageAt: null,
+  });
 };
 
 const createNotification = async ({
@@ -34,13 +40,42 @@ const createNotification = async ({
   });
 };
 
+const sanitizeConnectionRequest = (request) => ({
+  _id: request._id,
+  fromUser: request.fromUser,
+  toUser: request.toUser,
+  status: request.status,
+  createdAt: request.createdAt,
+  updatedAt: request.updatedAt,
+});
+
 export const sendConnectionRequest = async (req, res) => {
   try {
-    const io = req.app.get('io');
-    const toUser = req.body.toUser;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        message: 'Invalid input',
+        errors: errors.array().map((err) => ({
+          field: err.path,
+          message: err.msg,
+        })),
+      });
+    }
 
-    if (!toUser || String(toUser) === String(req.user._id)) {
+    const io = req.app.get('io');
+    const { toUser } = req.body;
+
+    if (!toUser || !mongoose.Types.ObjectId.isValid(toUser)) {
       return res.status(400).json({ message: 'Invalid target user' });
+    }
+
+    if (String(toUser) === String(req.user._id)) {
+      return res.status(400).json({ message: 'You cannot connect with yourself' });
+    }
+
+    const targetUserExists = await User.findById(toUser).select('_id');
+    if (!targetUserExists) {
+      return res.status(404).json({ message: 'Target user not found' });
     }
 
     const existingAnyDirection = await ConnectionRequest.findOne({
@@ -140,15 +175,15 @@ export const sendConnectionRequest = async (req, res) => {
 
         return res.json({
           message: 'Connection accepted automatically',
-          request: existingAnyDirection,
+          request: sanitizeConnectionRequest(existingAnyDirection),
           conversation,
         });
       }
 
       if (existingAnyDirection.status === 'rejected') {
-        return res
-          .status(400)
-          .json({ message: 'A request already existed and was rejected' });
+        return res.status(400).json({
+          message: 'A request already existed and was rejected',
+        });
       }
     }
 
@@ -183,10 +218,10 @@ export const sendConnectionRequest = async (req, res) => {
       });
     }
 
-    res.status(201).json(request);
+    return res.status(201).json(sanitizeConnectionRequest(request));
   } catch (error) {
-    console.error('sendConnectionRequest error:', error);
-    res.status(500).json({ message: 'Failed to send connection request' });
+    console.error('sendConnectionRequest error:', error.message);
+    return res.status(500).json({ message: 'Failed to send connection request' });
   }
 };
 
@@ -228,26 +263,53 @@ export const getPendingRequests = async (req, res) => {
       };
     });
 
-    res.json({ incoming, sent, connections });
+    return res.json({ incoming, sent, connections });
   } catch (error) {
-    console.error('getPendingRequests error:', error);
-    res.status(500).json({ message: 'Failed to fetch connections' });
+    console.error('getPendingRequests error:', error.message);
+    return res.status(500).json({ message: 'Failed to fetch connections' });
   }
 };
 
 export const actOnRequest = async (req, res) => {
   try {
-    const io = req.app.get('io');
-    const { status } = req.body;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        message: 'Invalid input',
+        errors: errors.array().map((err) => ({
+          field: err.path,
+          message: err.msg,
+        })),
+      });
+    }
 
-    if (!['accepted', 'rejected'].includes(status)) {
+    const io = req.app.get('io');
+    const { id } = req.params;
+    const { action } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid request ID' });
+    }
+
+    const statusMap = {
+      accept: 'accepted',
+      reject: 'rejected',
+    };
+
+    const status = statusMap[action];
+
+    if (!status) {
       return res.status(400).json({ message: 'Invalid action' });
     }
 
-    const request = await ConnectionRequest.findById(req.params.id);
+    const request = await ConnectionRequest.findById(id);
 
     if (!request || String(request.toUser) !== String(req.user._id)) {
       return res.status(404).json({ message: 'Request not found' });
+    }
+
+    if (request.status !== 'pending') {
+      return res.status(400).json({ message: 'Request already processed' });
     }
 
     request.status = status;
@@ -327,13 +389,13 @@ export const actOnRequest = async (req, res) => {
       }
     }
 
-    res.json({
+    return res.json({
       message: `Request ${status}`,
-      request,
+      request: sanitizeConnectionRequest(request),
       conversation,
     });
   } catch (error) {
-    console.error('actOnRequest error:', error);
-    res.status(500).json({ message: 'Failed to update request' });
+    console.error('actOnRequest error:', error.message);
+    return res.status(500).json({ message: 'Failed to update request' });
   }
 };

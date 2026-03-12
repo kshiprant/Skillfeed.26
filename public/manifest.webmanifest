@@ -1,13 +1,10 @@
 {
   "name": "Skillfeed",
   "short_name": "Skillfeed",
-  "description": "Discover ideas, connect with collaborators, and build together.",
-  "theme_color": "#2563eb",
-  "background_color": "#f4f7fb",
-  "display": "standalone",
-  "orientation": "portrait",
   "start_url": "/",
-  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220",
   "icons": [
     {
       "src": "/icon-192.png",

@@ -49,11 +49,11 @@ export default function ProfilePage() {
         try {
           const res = await api.get(`/users/${userId}`);
           data = res.data;
-        } catch (firstError) {
+        } catch {
           try {
             const res = await api.get(`/users/profile/${userId}`);
             data = res.data;
-          } catch (secondError) {
+          } catch {
             const res = await api.get(`/profiles/${userId}`);
             data = res.data;
           }
@@ -221,12 +221,19 @@ export default function ProfilePage() {
             </div>
 
             <div className="profile-main">
-              <div className="profile-head-row">
-                <div>
+              <div className="profile-main-top">
+                <div className="profile-identity">
                   <h2>{activeProfile.name || 'Profile'}</h2>
                   <p className="profile-headline">
                     {activeProfile.headline || activeProfile.role || 'Member'}
                   </p>
+
+                  {(activeProfile.role || activeProfile.city) && (
+                    <div className="profile-meta">
+                      {activeProfile.role ? <span>{activeProfile.role}</span> : null}
+                      {activeProfile.city ? <span>{activeProfile.city}</span> : null}
+                    </div>
+                  )}
                 </div>
 
                 {isOwnProfile ? (
@@ -236,12 +243,12 @@ export default function ProfilePage() {
                       className="ghost-btn"
                       onClick={() => setEditing((prev) => !prev)}
                     >
-                      {editing ? 'Cancel' : 'Edit profile'}
+                      {editing ? 'Cancel editing' : 'Edit profile'}
                     </button>
 
                     <button
                       type="button"
-                      className="ghost-btn danger-btn"
+                      className="ghost-btn danger-btn subtle-danger-btn"
                       onClick={logout}
                     >
                       Logout
@@ -250,40 +257,43 @@ export default function ProfilePage() {
                 ) : null}
               </div>
 
-              <div className="profile-meta">
-                {activeProfile.role && <span>{activeProfile.role}</span>}
-                {activeProfile.city && <span>{activeProfile.city}</span>}
+              <div className="profile-section">
+                <p className="profile-bio">
+                  {activeProfile.bio || 'No bio added yet.'}
+                </p>
               </div>
 
-              <p className="profile-bio">
-                {activeProfile.bio || 'No bio added yet.'}
-              </p>
-
-              {skillsList.length > 0 && (
-                <div className="profile-skills">
-                  {skillsList.map((skill, index) => (
-                    <span className="skill-chip" key={`${skill}-${index}`}>
-                      {skill}
-                    </span>
-                  ))}
+              {skillsList.length > 0 ? (
+                <div className="profile-section">
+                  <div className="profile-section-label">Skills</div>
+                  <div className="profile-skills">
+                    {skillsList.map((skill, index) => (
+                      <span className="skill-chip" key={`${skill}-${index}`}>
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              )}
+              ) : null}
 
-              {profileLinks.length > 0 && (
-                <div className="profile-links">
-                  {profileLinks.map((link) => (
-                    <a
-                      key={link.label}
-                      href={link.value}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="profile-link"
-                    >
-                      {link.label}
-                    </a>
-                  ))}
+              {profileLinks.length > 0 ? (
+                <div className="profile-section">
+                  <div className="profile-section-label">Links</div>
+                  <div className="profile-links">
+                    {profileLinks.map((link) => (
+                      <a
+                        key={link.label}
+                        href={link.value}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="profile-link"
+                      >
+                        {link.label}
+                      </a>
+                    ))}
+                  </div>
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
@@ -293,7 +303,10 @@ export default function ProfilePage() {
 
         {isOwnProfile && editing ? (
           <form className="card stack-form profile-edit-form" onSubmit={save}>
-            <h3>Edit profile</h3>
+            <div className="profile-form-head">
+              <h3>Edit profile</h3>
+              <p className="section-sub">Update how people see you on Skillfeed.</p>
+            </div>
 
             <input
               placeholder="Name"
@@ -364,4 +377,4 @@ export default function ProfilePage() {
       </section>
     </Layout>
   );
-                    }
+}

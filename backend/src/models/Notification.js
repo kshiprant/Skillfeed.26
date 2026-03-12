@@ -6,6 +6,7 @@ const notificationSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
+      index: true,
     },
 
     type: {
@@ -15,20 +16,26 @@ const notificationSchema = new mongoose.Schema(
         'connection_accepted',
         'connection_rejected',
         'message',
+        'join_request',
+        'join_accepted',
+        'join_rejected',
       ],
       required: true,
+      trim: true,
     },
 
     title: {
       type: String,
       required: true,
       trim: true,
+      maxlength: 120,
     },
 
     message: {
       type: String,
       required: true,
       trim: true,
+      maxlength: 300,
     },
 
     relatedUser: {
@@ -55,12 +62,27 @@ const notificationSchema = new mongoose.Schema(
       default: null,
     },
 
+    relatedIdea: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Idea',
+      default: null,
+    },
+
+    relatedJoinRequest: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'JoinRequest',
+      default: null,
+    },
+
     isRead: {
       type: Boolean,
       default: false,
+      index: true,
     },
   },
   { timestamps: true }
 );
+
+notificationSchema.index({ user: 1, createdAt: -1 });
 
 export default mongoose.model('Notification', notificationSchema);

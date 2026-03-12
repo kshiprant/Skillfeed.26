@@ -121,6 +121,8 @@ router.post('/', protect, async (req, res) => {
       return res.status(400).json({ message: 'Message text is required' });
     }
 
+    const trimmedText = text.trim();
+
     const connected = await areUsersConnected(req.user._id, toUser);
 
     if (!connected) {
@@ -135,11 +137,11 @@ router.post('/', protect, async (req, res) => {
       conversationId: conversation._id,
       sender: req.user._id,
       receiver: toUser,
-      text: text.trim(),
+      text: trimmedText,
       read: false,
     });
 
-    conversation.lastMessage = text.trim();
+    conversation.lastMessage = trimmedText;
     conversation.lastMessageAt = new Date();
     await conversation.save();
 
@@ -147,7 +149,7 @@ router.post('/', protect, async (req, res) => {
       user: toUser,
       type: 'message',
       title: 'New message',
-      message: text.trim().slice(0, 100),
+      message: trimmedText.slice(0, 100),
       relatedUser: req.user._id,
       relatedConversation: conversation._id,
       relatedMessage: message._id,
@@ -200,9 +202,9 @@ router.post('/', protect, async (req, res) => {
     }
 
     res.status(201).json({
-      message: 'Message sent',
+      success: true,
       conversationId: conversation._id,
-      data: populatedMessage,
+      message: populatedMessage,
     });
   } catch (error) {
     console.error('POST /api/messages error:', error);

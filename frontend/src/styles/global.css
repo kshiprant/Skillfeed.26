@@ -105,7 +105,6 @@ textarea {
 }
 
 .auth-card h1,
-.topbar h1,
 .hero-card h2 {
   margin: 10px 0 8px;
 }
@@ -186,7 +185,7 @@ textarea {
 }
 
 .app-shell {
-  padding: 18px 14px 92px;
+  padding: 20px 16px 98px;
   max-width: 980px;
   margin: 0 auto;
 }
@@ -194,14 +193,28 @@ textarea {
 .topbar {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
   align-items: flex-start;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 
 .topbar-copy {
   display: grid;
   gap: 2px;
+}
+
+.topbar h1 {
+  margin: 8px 0 10px;
+  font-size: clamp(2.2rem, 6vw, 4rem);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+}
+
+.topbar p {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.45;
+  max-width: 680px;
 }
 
 .top-actions {
@@ -241,24 +254,36 @@ textarea {
 
 .grid-cards {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
 .stat-card {
-  padding: 18px;
+  padding: 16px 16px 14px;
   display: grid;
   gap: 6px;
+  min-height: 116px;
+  align-content: start;
 }
 
-.stat-card span {
+.stat-label {
   color: var(--muted);
   font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
 }
 
-.stat-card strong {
-  font-size: 28px;
+.stat-value {
+  font-size: clamp(2rem, 5vw, 2.5rem);
+  line-height: 1;
   color: var(--text);
+  letter-spacing: -0.04em;
+}
+
+.stat-hint {
+  color: #7b8798;
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .hero-card ul {
@@ -755,47 +780,67 @@ textarea {
   max-width: 980px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  padding: 10px;
-  backdrop-filter: blur(14px);
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.1);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 22px;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 12px 34px rgba(15, 23, 42, 0.12);
 }
 
-.bottom-nav a {
+.bottom-nav-link {
   color: var(--muted);
   text-align: center;
-  padding: 10px 8px;
-  border-radius: 12px;
-  font-size: 13px;
-  font-weight: 700;
+  padding: 8px 4px 7px;
+  border-radius: 16px;
   position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-width: 0;
+  transition: 0.18s ease;
 }
 
-.bottom-nav a.active {
+.bottom-nav-link.active {
   background: rgba(37, 99, 235, 0.1);
   color: var(--accent);
 }
 
-.nav-with-badge {
+.bottom-nav-icon-wrap {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.nav-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.bottom-nav-label {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
 .nav-badge {
   position: absolute;
-  top: -4px;
-  right: 2px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
+  top: -3px;
+  right: -4px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
   border-radius: 999px;
   background: #ef4444;
   color: #ffffff;
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 10px;
+  font-weight: 800;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -890,19 +935,26 @@ textarea {
   }
 
   .bottom-nav {
-    gap: 6px;
-    padding: 8px;
-    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    padding: 7px;
   }
 
-  .bottom-nav a {
-    font-size: 11px;
-    padding: 10px 4px;
+  .bottom-nav-link {
+    padding: 8px 2px 6px;
+  }
+
+  .bottom-nav-label {
+    font-size: 10px;
+  }
+
+  .nav-icon {
+    width: 21px;
+    height: 21px;
   }
 
   .nav-badge {
     top: -2px;
-    right: 0;
+    right: -2px;
     min-width: 16px;
     height: 16px;
     font-size: 10px;
@@ -910,7 +962,7 @@ textarea {
   }
 
   .app-shell {
-    padding-bottom: 100px;
+    padding-bottom: 102px;
   }
 
   .idea-title {

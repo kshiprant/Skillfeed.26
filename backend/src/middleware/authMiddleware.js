@@ -16,24 +16,22 @@ const protect = async (req, res, next) => {
       return res.status(401).json({ message: 'Not authorized' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
+      issuer: 'skillfeed-api',
+      audience: 'skillfeed-app',
+    });
 
-    if (!decoded?.id || !mongoose.Types.ObjectId.isValid(decoded.id)) {
+    if (!decoded?.sub || !mongoose.Types.ObjectId.isValid(decoded.sub)) {
       return res.status(401).json({ message: 'Invalid token payload' });
     }
 
-    const user = await User.findById(decoded.id).select(
+    const user = await User.findById(decoded.sub).select(
       '_id name email headline bio skills city avatarUrl role links createdAt updatedAt'
     );
 
     if (!user) {
       return res.status(401).json({ message: 'User not found' });
     }
-
-    // Optional future checks:
-    // if (user.isBlocked) {
-    //   return res.status(403).json({ message: 'Account is blocked' });
-    // }
 
     req.user = user;
     return next();

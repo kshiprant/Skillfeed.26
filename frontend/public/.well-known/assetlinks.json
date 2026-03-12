@@ -2,7 +2,7 @@
       "relation": ["delegate_permission/common.handle_all_urls"],
       "target": {
         "namespace": "android_app",
-        "package_name": "app.skillfeed.mobile",
-        "sha256_cert_fingerprints": ["39:04:07:64:0C:9A:38:76:B8:72:81:40:FC:82:94:80:4E:A4:88:9E:CF:BB:C1:2D:E0:98:04:6F:F9:B7:22:9D"]
+        "package_name": "app.vercel.skillfeed_26.twa",
+        "sha256_cert_fingerprints": ["BB:AB:64:37:2E:22:68:7B:AF:E5:A3:C5:97:89:50:21:38:A5:79:B7:B2:FB:11:1F:36:78:77:17:93:2F:33:9F"]
       }
     }]

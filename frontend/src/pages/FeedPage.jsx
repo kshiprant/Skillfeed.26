@@ -55,9 +55,21 @@ export default function FeedPage() {
       subtitle="Discover ideas, connect with collaborators, and start building."
     >
       <section className="grid-cards">
-        <StatCard label="Live ideas" value={stats.ideas} />
-        <StatCard label="Incoming requests" value={stats.incoming} />
-        <StatCard label="Connections" value={stats.connections} />
+        <StatCard
+          label="Live ideas"
+          value={stats.ideas}
+          hint="Projects on your radar"
+        />
+        <StatCard
+          label="Incoming requests"
+          value={stats.incoming}
+          hint="People waiting for response"
+        />
+        <StatCard
+          label="Connections"
+          value={stats.connections}
+          hint="Your current network"
+        />
       </section>
 
       <section className="card hero-card">
@@ -91,8 +103,12 @@ export default function FeedPage() {
                 </div>
                 <p>{getIdeaText(idea)}</p>
                 <div className="feed-meta">
-                  <span>{Array.isArray(idea?.likes) ? idea.likes.length : idea?.likesCount || 0} likes</span>
-                  <span>{Array.isArray(idea?.comments) ? idea.comments.length : idea?.commentsCount || 0} comments</span>
+                  <span>
+                    {Array.isArray(idea?.likes) ? idea.likes.length : idea?.likesCount || 0} likes
+                  </span>
+                  <span>
+                    {Array.isArray(idea?.comments) ? idea.comments.length : idea?.commentsCount || 0} comments
+                  </span>
                 </div>
               </article>
             ))}

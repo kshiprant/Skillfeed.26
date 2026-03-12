@@ -307,8 +307,7 @@ textarea {
   justify-content: space-between;
 }
 
-.request-row,
-.conversation-item {
+.request-row {
   padding: 12px 0;
   border-bottom: 1px solid var(--line);
 }
@@ -362,37 +361,114 @@ textarea {
   min-width: 84px;
 }
 
+/* Messages */
+
 .messages-grid {
   display: grid;
   grid-template-columns: 320px 1fr;
   gap: 16px;
-  min-height: 65vh;
+  min-height: 68vh;
+  align-items: start;
+}
+
+.convo-list {
+  gap: 14px;
+}
+
+.convo-panel,
+.chat-panel {
+  padding: 18px;
+}
+
+.panel-head h3,
+.chat-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+
+.panel-head p,
+.chat-header p {
+  margin: 6px 0 0;
+}
+
+.conversation-list {
+  display: grid;
+  gap: 10px;
 }
 
 .conversation-item {
-  background: transparent;
-  border: 0;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid transparent;
+  border-radius: 18px;
+  background: rgba(248, 250, 252, 0.78);
   color: var(--text);
   text-align: left;
-  display: grid;
-  gap: 4px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  transition: 0.18s ease;
 }
 
 .conversation-item.active {
-  background: rgba(37, 99, 235, 0.08);
-  border-radius: 12px;
-  padding: 12px;
+  background: rgba(37, 99, 235, 0.09);
+  border-color: rgba(37, 99, 235, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.04);
 }
 
-.conversation-item span {
-  color: var(--muted);
+.conversation-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  color: #1d4ed8;
+  display: grid;
+  place-items: center;
   font-size: 14px;
+  font-weight: 800;
+  flex-shrink: 0;
+  border: 1px solid rgba(37, 99, 235, 0.12);
+}
+
+.conversation-avatar.large {
+  width: 50px;
+  height: 50px;
+  font-size: 15px;
+}
+
+.conversation-copy {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.conversation-topline strong {
+  font-size: 15px;
+  color: var(--text);
+}
+
+.conversation-headline {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.conversation-preview {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .chat-panel {
   display: grid;
   grid-template-rows: auto 1fr auto;
-  gap: 12px;
+  gap: 14px;
+  min-height: 68vh;
 }
 
 .chat-header {
@@ -400,34 +476,58 @@ textarea {
   border-bottom: 1px solid var(--line);
 }
 
+.chat-user-block {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
 .chat-messages {
   display: grid;
   gap: 10px;
   align-content: start;
-  min-height: 300px;
+  min-height: 320px;
+  max-height: 52vh;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .bubble {
   max-width: 78%;
-  padding: 11px 13px;
-  border-radius: 16px;
-  line-height: 1.45;
+  padding: 12px 14px;
+  border-radius: 18px;
+  line-height: 1.5;
+  font-size: 14px;
+  word-break: break-word;
 }
 
 .bubble.me {
   margin-left: auto;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(96, 165, 250, 0.12));
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.16), rgba(96, 165, 250, 0.14));
   color: var(--text);
+  border-bottom-right-radius: 8px;
 }
 
 .bubble.them {
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.96);
   border: 1px solid var(--line);
+  border-bottom-left-radius: 8px;
 }
 
 .chat-input-row {
   display: flex;
   gap: 10px;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.chat-input-row input {
+  min-height: 48px;
+}
+
+.chat-send-btn {
+  min-width: 96px;
 }
 
 .empty-chat,
@@ -447,6 +547,26 @@ textarea {
 
 .empty-state-block h3 {
   margin: 0;
+}
+
+.compact-empty {
+  padding: 10px 0;
+}
+
+.compact-empty h4 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--text);
+}
+
+.compact-empty p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.rich-empty-chat {
+  min-height: 100%;
 }
 
 .feed-list {
@@ -853,7 +973,6 @@ textarea {
   .person-card,
   .idea-header,
   .request-row,
-  .chat-input-row,
   .section-head,
   .feed-item-top,
   .profile-hero,
@@ -934,6 +1053,31 @@ textarea {
     width: 100%;
   }
 
+  .chat-panel {
+    min-height: auto;
+  }
+
+  .chat-messages {
+    min-height: 260px;
+    max-height: 46vh;
+  }
+
+  .chat-user-block {
+    align-items: center;
+  }
+
+  .chat-input-row {
+    flex-direction: row;
+  }
+
+  .chat-send-btn {
+    min-width: 88px;
+  }
+
+  .conversation-item {
+    padding: 12px;
+  }
+
   .bottom-nav {
     gap: 4px;
     padding: 7px;
@@ -972,4 +1116,4 @@ textarea {
   .idea-description {
     font-size: 15px;
   }
-}
+  }

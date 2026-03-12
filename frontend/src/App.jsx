@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import FeedPage from './pages/FeedPage';
@@ -16,9 +17,15 @@ export default function App() {
   return (
     <Routes>
       <Route
+        path="/"
+        element={!token ? <LandingPage /> : <Navigate to="/feed" replace />}
+      />
+
+      <Route
         path="/login"
         element={!token ? <LoginPage /> : <Navigate to="/feed" replace />}
       />
+
       <Route
         path="/register"
         element={!token ? <RegisterPage /> : <Navigate to="/feed" replace />}
@@ -36,7 +43,7 @@ export default function App() {
 
       <Route
         path="*"
-        element={<Navigate to={token ? '/feed' : '/login'} replace />}
+        element={<Navigate to={token ? '/feed' : '/'} replace />}
       />
     </Routes>
   );

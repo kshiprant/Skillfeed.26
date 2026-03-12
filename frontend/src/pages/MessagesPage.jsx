@@ -75,7 +75,9 @@ export default function MessagesPage() {
     const handleMessageNew = ({ conversationId, message }) => {
       if (String(activeConversation?._id) === String(conversationId)) {
         setMessages((prev) => {
-          const alreadyExists = prev.some((item) => String(item._id) === String(message._id));
+          const alreadyExists = prev.some(
+            (item) => String(item._id) === String(message._id)
+          );
           if (alreadyExists) return prev;
           return [...prev, message];
         });
@@ -125,7 +127,10 @@ export default function MessagesPage() {
 
         const nextConversationId = data?.conversationId;
 
-        if (joinedConversationRef.current && joinedConversationRef.current !== nextConversationId) {
+        if (
+          joinedConversationRef.current &&
+          joinedConversationRef.current !== nextConversationId
+        ) {
           socket.emit('leave_conversation', {
             conversationId: joinedConversationRef.current,
           });
@@ -147,10 +152,6 @@ export default function MessagesPage() {
     };
 
     loadMessages();
-
-    return () => {
-      // no-op here; handled when active conversation changes
-    };
   }, [activeConversation?.user?._id]);
 
   useEffect(() => {
@@ -174,12 +175,25 @@ export default function MessagesPage() {
     try {
       setError('');
 
-      await api.post('/messages', {
+      const { data } = await api.post('/messages', {
         text,
         toUser: activeConversation.user._id,
       });
 
+      const newMessage = data?.message;
+
+      if (newMessage) {
+        setMessages((prev) => {
+          const alreadyExists = prev.some(
+            (item) => String(item._id) === String(newMessage._id)
+          );
+          if (alreadyExists) return prev;
+          return [...prev, newMessage];
+        });
+      }
+
       e.currentTarget.reset();
+      loadConversations(activeConversation?._id || null);
     } catch (err) {
       console.error('Failed to send message:', err);
       setError(err.response?.data?.message || 'Failed to send message.');

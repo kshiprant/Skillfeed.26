@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.skillfeed.mobile",
+        "sha256_cert_fingerprints": ["39:04:07:64:0C:9A:38:76:B8:72:81:40:FC:82:94:80:4E:A4:88:9E:CF:BB:C1:2D:E0:98:04:6F:F9:B7:22:9D"]
+      }
+    }]

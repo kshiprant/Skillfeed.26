@@ -11,6 +11,7 @@ export default function IdeaCard({
   const [comment, setComment] = useState('');
   const [sending, setSending] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showComposer, setShowComposer] = useState(false);
 
   const safeId = idea?._id || idea?.id;
 
@@ -23,9 +24,9 @@ export default function IdeaCard({
     idea?.createdBy?.headline ||
     'Member';
 
-  const authorInitial = authorName.charAt(0).toUpperCase();
   const title = idea?.title || 'Untitled idea';
   const description = idea?.description || 'No description added yet.';
+  const stage = idea?.stage || 'Idea';
   const tags = Array.isArray(idea?.tags) ? idea.tags : [];
   const comments = Array.isArray(idea?.comments) ? idea.comments : [];
   const joinRequestsCount = idea?.joinRequestsCount || 0;
@@ -53,6 +54,13 @@ export default function IdeaCard({
   const isOwner =
     String(idea?.user?._id || idea?.user || '') === String(userId);
 
+  const authorInitials = authorName
+    .split(' ')
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
   const handleLike = () => {
     if (!safeId) return;
     onLike?.(safeId);
@@ -65,6 +73,7 @@ export default function IdeaCard({
       setSending(true);
       await onComment?.(safeId, comment.trim());
       setComment('');
+      setShowComposer(false);
     } catch (error) {
       console.error('Failed to send comment:', error);
     } finally {
@@ -94,103 +103,116 @@ export default function IdeaCard({
   };
 
   return (
-    <article className="card idea-card">
-      <div className="idea-author">
-        <div className="avatar">{authorInitial}</div>
+    <article className="card sf-idea-card">
+      <div className="sf-idea-top">
+        <div className="sf-idea-author">
+          <div className="sf-idea-avatar">{authorInitials}</div>
 
-        <div className="author-meta">
-          <strong>{authorName}</strong>
-          <span>{authorHeadline}</span>
+          <div className="sf-idea-author-meta">
+            <div className="sf-idea-author-row">
+              <strong>{authorName}</strong>
+              {isOwner ? <span className="sf-owner-badge">Your idea</span> : null}
+            </div>
+            <span>{authorHeadline}</span>
+          </div>
         </div>
-      </div>
 
-      <h3 className="idea-title">{title}</h3>
-
-      <p className="idea-description">{description}</p>
-
-      {tags.length > 0 && (
-        <div className="tag-row">
-          {tags.map((tag, index) => (
-            <span key={`${tag}-${index}`} className="tag">
-              #{tag}
-            </span>
-          ))}
-        </div>
-      )}
-
-      <div className="idea-stage">{idea?.stage || 'Idea'}</div>
-
-      <div className="idea-stats">
-        <span>❤️ {likeCount} {likeCount === 1 ? 'Like' : 'Likes'}</span>
-        <span>💬 {comments.length} {comments.length === 1 ? 'Comment' : 'Comments'}</span>
-        <span>🚀 {joinRequestsCount} Join Requests</span>
-      </div>
-
-      <div className="idea-actions">
-        <button className="ghost-btn" type="button" onClick={handleLike}>
-          {liked ? 'Unlike' : 'Like'}
-        </button>
-
-        <button
-          className="ghost-btn"
-          type="button"
-          onClick={() => {
-            const input = document.getElementById(`comment-input-${safeId}`);
-            input?.focus();
-          }}
-        >
-          Comment
-        </button>
-
-        <button
-          className="primary-btn"
-          type="button"
-          onClick={handleJoin}
-          disabled={!onJoin}
-        >
-          Join Project
-        </button>
-
-        {isOwner && (
+        {isOwner ? (
           <button
-            className="ghost-btn danger-btn"
             type="button"
+            className="sf-delete-chip"
             onClick={handleDelete}
             disabled={deleting}
           >
-            {deleting ? 'Deleting...' : 'Delete Idea'}
+            {deleting ? 'Deleting...' : 'Delete'}
           </button>
-        )}
+        ) : null}
       </div>
 
-      {comments.length > 0 && (
-        <div className="comment-list">
-          {comments.map((item, index) => (
-            <div key={item?._id || `${item?.comment}-${index}`} className="comment-item">
+      <div className="sf-idea-body">
+        <h3 className="sf-idea-title">{title}</h3>
+        <p className="sf-idea-description">{description}</p>
+
+        <div className="sf-stage-row">
+          <span className="sf-stage-pill">{stage}</span>
+        </div>
+
+        {tags.length > 0 ? (
+          <div className="sf-tag-row">
+            {tags.map((tag, index) => (
+              <span key={`${tag}-${index}`} className="sf-tag">
+                #{tag}
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      <div className="sf-stats-row">
+        <span>❤️ {likeCount}</span>
+        <span>💬 {comments.length}</span>
+        <span>🚀 {joinRequestsCount}</span>
+      </div>
+
+      <div className="sf-action-row">
+        <button type="button" className="sf-action-btn" onClick={handleLike}>
+          <span className="sf-action-icon">{liked ? '❤️' : '🤍'}</span>
+          <span>{liked ? 'Liked' : 'Like'}</span>
+        </button>
+
+        <button
+          type="button"
+          className="sf-action-btn"
+          onClick={() => setShowComposer((prev) => !prev)}
+        >
+          <span className="sf-action-icon">💬</span>
+          <span>Comment</span>
+        </button>
+
+        <button
+          type="button"
+          className="sf-action-btn sf-action-btn-primary"
+          onClick={handleJoin}
+          disabled={!onJoin}
+        >
+          <span className="sf-action-icon">🚀</span>
+          <span>Join</span>
+        </button>
+      </div>
+
+      {comments.length > 0 ? (
+        <div className="sf-comment-list">
+          {comments.slice(0, 3).map((item, index) => (
+            <div key={item?._id || `${item?.comment}-${index}`} className="sf-comment-item">
               <strong>{item?.user?.name || 'User'}</strong>
               <span>{item?.comment || ''}</span>
             </div>
           ))}
+          {comments.length > 3 ? (
+            <div className="sf-more-comments">+ {comments.length - 3} more comments</div>
+          ) : null}
         </div>
-      )}
+      ) : null}
 
-      <div className="inline-form">
-        <input
-          id={`comment-input-${safeId}`}
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          placeholder="Write a comment..."
-        />
+      {showComposer ? (
+        <div className="sf-comment-composer">
+          <input
+            id={`comment-input-${safeId}`}
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Write a comment..."
+          />
 
-        <button
-          className="primary-btn"
-          type="button"
-          onClick={handleComment}
-          disabled={sending}
-        >
-          {sending ? 'Sending...' : 'Send'}
-        </button>
-      </div>
+          <button
+            className="primary-btn sf-send-btn"
+            type="button"
+            onClick={handleComment}
+            disabled={sending || !comment.trim()}
+          >
+            {sending ? 'Sending...' : 'Send'}
+          </button>
+        </div>
+      ) : null}
     </article>
   );
 }

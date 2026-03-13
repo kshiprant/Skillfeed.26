@@ -6,6 +6,7 @@ import {
   getMyProfile,
   getUserById,
   updateProfile,
+  deleteMyAccount,
 } from '../controllers/userController.js';
 
 const router = express.Router();
@@ -30,6 +31,8 @@ router.put(
   ],
   updateProfile
 );
+
+router.delete('/me', deleteMyAccount);
 
 router.get('/discover', discoverUsers);
 

@@ -150,25 +150,10 @@ export default function IdeaCard({
         </div>
       </div>
 
-      <div className="sf-stats-row">
-        <span className="sf-stat-item">
-          <span className="sf-stat-icon">❤️</span>
-          <span>{likeCount}</span>
-        </span>
-        <span className="sf-stat-item">
-          <span className="sf-stat-icon">💬</span>
-          <span>{comments.length}</span>
-        </span>
-        <span className="sf-stat-item">
-          <span className="sf-stat-icon">🚀</span>
-          <span>{joinRequestsCount}</span>
-        </span>
-      </div>
-
       <div className="sf-action-row">
         <button type="button" className="sf-action-btn" onClick={handleLike}>
           <span className="sf-action-icon">{liked ? '❤️' : '🤍'}</span>
-          <span>{liked ? 'Liked' : 'Like'}</span>
+          <span>{likeCount}</span>
         </button>
 
         <button
@@ -177,7 +162,7 @@ export default function IdeaCard({
           onClick={() => setShowComposer((prev) => !prev)}
         >
           <span className="sf-action-icon">💬</span>
-          <span>Comment</span>
+          <span>{comments.length}</span>
         </button>
 
         <button
@@ -187,7 +172,7 @@ export default function IdeaCard({
           disabled={!onJoin}
         >
           <span className="sf-action-icon">🚀</span>
-          <span>Join</span>
+          <span>{joinRequestsCount}</span>
         </button>
       </div>
 
@@ -226,4 +211,4 @@ export default function IdeaCard({
       ) : null}
     </article>
   );
-}
+      }

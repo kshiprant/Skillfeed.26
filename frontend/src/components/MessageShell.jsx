@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+
 export default function MessageShell({
   conversations,
   activeConversation,
@@ -7,7 +9,10 @@ export default function MessageShell({
   onSend,
   loadingConversations = false,
   loadingMessages = false,
+  sendingMessage = false,
 }) {
+  const [messageText, setMessageText] = useState('');
+
   const getInitials = (name = 'U') =>
     name
       .split(' ')
@@ -15,6 +20,20 @@ export default function MessageShell({
       .join('')
       .slice(0, 2)
       .toUpperCase();
+
+  useEffect(() => {
+    setMessageText('');
+  }, [activeConversation?._id]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const ok = await onSend?.(messageText);
+
+    if (ok) {
+      setMessageText('');
+    }
+  };
 
   return (
     <div className="messages-grid">
@@ -127,14 +146,21 @@ export default function MessageShell({
               )}
             </div>
 
-            <form className="chat-input-row" onSubmit={onSend}>
+            <form className="chat-input-row" onSubmit={handleSubmit}>
               <input
                 name="message"
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
                 placeholder="Type a message..."
                 autoComplete="off"
+                disabled={sendingMessage}
               />
-              <button type="submit" className="primary-btn chat-send-btn">
-                Send
+              <button
+                type="submit"
+                className="primary-btn chat-send-btn"
+                disabled={sendingMessage || !messageText.trim()}
+              >
+                {sendingMessage ? 'Sending...' : 'Send'}
               </button>
             </form>
           </>

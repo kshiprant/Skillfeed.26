@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 export default function ProfilePage() {
   const { user, setUser, logout } = useAuth();
   const { userId } = useParams();
+  const navigate = useNavigate();
 
   const isOwnProfile = !userId || String(userId) === String(user?._id);
 
@@ -14,6 +15,7 @@ export default function ProfilePage() {
   const [loadingProfile, setLoadingProfile] = useState(Boolean(userId));
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const [saved, setSaved] = useState('');
   const [error, setError] = useState('');
 
@@ -167,6 +169,29 @@ export default function ProfilePage() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (!isOwnProfile) return;
+
+    const confirmed = window.confirm(
+      'Delete your account permanently? This will remove your profile, ideas, likes, comments, and connection requests.'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setDeletingAccount(true);
+      setError('');
+      await api.delete('/users/me');
+      logout();
+      navigate('/register');
+    } catch (err) {
+      console.error('Failed to delete account:', err);
+      setError(err.response?.data?.message || 'Could not delete account.');
+    } finally {
+      setDeletingAccount(false);
+    }
+  };
+
   if (loadingProfile) {
     return (
       <Layout
@@ -252,6 +277,15 @@ export default function ProfilePage() {
                       onClick={logout}
                     >
                       Logout
+                    </button>
+
+                    <button
+                      type="button"
+                      className="ghost-btn danger-btn"
+                      onClick={handleDeleteAccount}
+                      disabled={deletingAccount}
+                    >
+                      {deletingAccount ? 'Deleting account...' : 'Delete account'}
                     </button>
                   </div>
                 ) : null}

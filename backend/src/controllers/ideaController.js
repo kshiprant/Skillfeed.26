@@ -175,3 +175,30 @@ export const addComment = async (req, res) => {
     return res.status(500).json({ message: 'Failed to add comment' });
   }
 };
+
+export const deleteIdea = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid idea ID' });
+    }
+
+    const idea = await Idea.findById(id);
+
+    if (!idea) {
+      return res.status(404).json({ message: 'Idea not found' });
+    }
+
+    if (String(idea.user) !== String(req.user._id)) {
+      return res.status(403).json({ message: 'Not authorized to delete this idea' });
+    }
+
+    await idea.deleteOne();
+
+    return res.json({ message: 'Idea deleted successfully', id });
+  } catch (error) {
+    console.error('deleteIdea error:', error.message);
+    return res.status(500).json({ message: 'Failed to delete idea' });
+  }
+};

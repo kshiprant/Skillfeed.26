@@ -133,25 +133,36 @@ export default function IdeaCard({
         <h3 className="sf-idea-title">{title}</h3>
         <p className="sf-idea-description">{description}</p>
 
-        <div className="sf-stage-row">
-          <span className="sf-stage-pill">{stage}</span>
-        </div>
-
-        {tags.length > 0 ? (
-          <div className="sf-tag-row">
-            {tags.map((tag, index) => (
-              <span key={`${tag}-${index}`} className="sf-tag">
-                #{tag}
-              </span>
-            ))}
+        <div className="sf-meta-stack">
+          <div className="sf-stage-row">
+            <span className="sf-stage-pill">{stage}</span>
           </div>
-        ) : null}
+
+          {tags.length > 0 ? (
+            <div className="sf-tag-row">
+              {tags.map((tag, index) => (
+                <span key={`${tag}-${index}`} className="sf-tag">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          ) : null}
+        </div>
       </div>
 
       <div className="sf-stats-row">
-        <span>❤️ {likeCount}</span>
-        <span>💬 {comments.length}</span>
-        <span>🚀 {joinRequestsCount}</span>
+        <span className="sf-stat-item">
+          <span className="sf-stat-icon">❤️</span>
+          <span>{likeCount}</span>
+        </span>
+        <span className="sf-stat-item">
+          <span className="sf-stat-icon">💬</span>
+          <span>{comments.length}</span>
+        </span>
+        <span className="sf-stat-item">
+          <span className="sf-stat-icon">🚀</span>
+          <span>{joinRequestsCount}</span>
+        </span>
       </div>
 
       <div className="sf-action-row">
@@ -182,14 +193,14 @@ export default function IdeaCard({
 
       {comments.length > 0 ? (
         <div className="sf-comment-list">
-          {comments.slice(0, 3).map((item, index) => (
+          {comments.slice(0, 2).map((item, index) => (
             <div key={item?._id || `${item?.comment}-${index}`} className="sf-comment-item">
               <strong>{item?.user?.name || 'User'}</strong>
               <span>{item?.comment || ''}</span>
             </div>
           ))}
-          {comments.length > 3 ? (
-            <div className="sf-more-comments">+ {comments.length - 3} more comments</div>
+          {comments.length > 2 ? (
+            <div className="sf-more-comments">+ {comments.length - 2} more comments</div>
           ) : null}
         </div>
       ) : null}

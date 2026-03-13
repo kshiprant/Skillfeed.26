@@ -5,10 +5,12 @@ export default function IdeaCard({
   onLike,
   onComment,
   onJoin,
+  onDelete,
   userId,
 }) {
   const [comment, setComment] = useState('');
   const [sending, setSending] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const safeId = idea?._id || idea?.id;
 
@@ -48,6 +50,9 @@ export default function IdeaCard({
     return false;
   }, [idea?.liked, idea?.likes, userId]);
 
+  const isOwner =
+    String(idea?.user?._id || idea?.user || '') === String(userId);
+
   const handleLike = () => {
     if (!safeId) return;
     onLike?.(safeId);
@@ -70,6 +75,22 @@ export default function IdeaCard({
   const handleJoin = () => {
     if (!safeId || !onJoin) return;
     onJoin(safeId, idea);
+  };
+
+  const handleDelete = async () => {
+    if (!safeId || !onDelete) return;
+
+    const confirmed = window.confirm('Delete this idea?');
+    if (!confirmed) return;
+
+    try {
+      setDeleting(true);
+      await onDelete(safeId);
+    } catch (error) {
+      console.error('Failed to delete idea:', error);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -129,6 +150,17 @@ export default function IdeaCard({
         >
           Join Project
         </button>
+
+        {isOwner && (
+          <button
+            className="ghost-btn danger-btn"
+            type="button"
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            {deleting ? 'Deleting...' : 'Delete Idea'}
+          </button>
+        )}
       </div>
 
       {comments.length > 0 && (
@@ -161,4 +193,4 @@ export default function IdeaCard({
       </div>
     </article>
   );
-          }
+}

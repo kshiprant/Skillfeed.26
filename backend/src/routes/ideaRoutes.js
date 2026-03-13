@@ -6,6 +6,7 @@ import {
   createIdea,
   getIdeas,
   toggleLike,
+  deleteIdea,
 } from '../controllers/ideaController.js';
 
 const router = express.Router();
@@ -39,6 +40,12 @@ router.post(
     body('text').isString().trim().isLength({ min: 1, max: 1000 }),
   ],
   addComment
+);
+
+router.delete(
+  '/:id',
+  [param('id').isMongoId()],
+  deleteIdea
 );
 
 export default router;

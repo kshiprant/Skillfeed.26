@@ -13,6 +13,7 @@ export default function MessagesPage() {
   const [messages, setMessages] = useState([]);
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [sendingMessage, setSendingMessage] = useState(false);
   const [error, setError] = useState('');
 
   const joinedConversationRef = useRef(null);
@@ -164,19 +165,19 @@ export default function MessagesPage() {
     };
   }, []);
 
-  const onSend = async (e) => {
-    e.preventDefault();
+  const onSend = async (text) => {
+    const safeText = typeof text === 'string' ? text.trim() : '';
 
-    const form = new FormData(e.currentTarget);
-    const text = form.get('message')?.toString().trim();
-
-    if (!text || !activeConversation?.user?._id) return;
+    if (!safeText || !activeConversation?.user?._id || sendingMessage) {
+      return false;
+    }
 
     setError('');
+    setSendingMessage(true);
 
     try {
       const { data } = await api.post('/messages', {
-        text,
+        text: safeText,
         toUser: activeConversation.user._id,
       });
 
@@ -192,17 +193,19 @@ export default function MessagesPage() {
         });
       }
 
-      e.currentTarget.reset();
+      try {
+        await loadConversations(activeConversation?._id || null);
+      } catch (err) {
+        console.error('Failed to refresh conversations after sending:', err);
+      }
+
+      return true;
     } catch (err) {
       console.error('Failed to send message:', err);
       setError(err.response?.data?.message || 'Failed to send message.');
-      return;
-    }
-
-    try {
-      await loadConversations(activeConversation?._id || null);
-    } catch (err) {
-      console.error('Failed to refresh conversations after sending:', err);
+      return false;
+    } finally {
+      setSendingMessage(false);
     }
   };
 
@@ -219,7 +222,8 @@ export default function MessagesPage() {
         onSend={onSend}
         loadingConversations={loadingConversations}
         loadingMessages={loadingMessages}
+        sendingMessage={sendingMessage}
       />
     </Layout>
   );
-          }
+}

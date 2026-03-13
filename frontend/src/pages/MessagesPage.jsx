@@ -172,17 +172,17 @@ export default function MessagesPage() {
 
     if (!text || !activeConversation?.user?._id) return;
 
-    try {
-      setError('');
+    setError('');
 
+    try {
       const { data } = await api.post('/messages', {
         text,
         toUser: activeConversation.user._id,
       });
 
-      const newMessage = data?.message;
+      const newMessage = data?.message || data;
 
-      if (newMessage) {
+      if (newMessage && typeof newMessage === 'object') {
         setMessages((prev) => {
           const alreadyExists = prev.some(
             (item) => String(item._id) === String(newMessage._id)
@@ -193,10 +193,16 @@ export default function MessagesPage() {
       }
 
       e.currentTarget.reset();
-      loadConversations(activeConversation?._id || null);
     } catch (err) {
       console.error('Failed to send message:', err);
       setError(err.response?.data?.message || 'Failed to send message.');
+      return;
+    }
+
+    try {
+      await loadConversations(activeConversation?._id || null);
+    } catch (err) {
+      console.error('Failed to refresh conversations after sending:', err);
     }
   };
 
@@ -216,4 +222,4 @@ export default function MessagesPage() {
       />
     </Layout>
   );
-}
+          }

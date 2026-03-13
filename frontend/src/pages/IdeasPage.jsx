@@ -112,10 +112,22 @@ export default function IdeasPage() {
 
   const addComment = async (id, comment) => {
     try {
-      await api.post(`/ideas/${id}/comment`, { comment });
+      await api.post(`/ideas/${id}/comment`, { text: comment });
       loadIdeas();
     } catch (err) {
       console.error('Failed to add comment:', err);
+    }
+  };
+
+  const deleteIdea = async (id) => {
+    try {
+      await api.delete(`/ideas/${id}`);
+      setIdeas((prev) =>
+        prev.filter((idea) => String(idea._id || idea.id) !== String(id))
+      );
+    } catch (err) {
+      console.error('Failed to delete idea:', err);
+      setError(err.response?.data?.message || 'Could not delete idea.');
     }
   };
 
@@ -290,6 +302,7 @@ export default function IdeasPage() {
               onLike={likeIdea}
               onComment={addComment}
               onJoin={openJoinRequest}
+              onDelete={deleteIdea}
               userId={user?._id}
             />
           ))
@@ -297,4 +310,4 @@ export default function IdeasPage() {
       </section>
     </Layout>
   );
-}
+        }

@@ -2,6 +2,7 @@ import { validationResult } from 'express-validator';
 import mongoose from 'mongoose';
 import User from '../models/User.js';
 import ConnectionRequest from '../models/ConnectionRequest.js';
+import Idea from '../models/Idea.js';
 
 const sanitizeUser = (user, extra = {}) => ({
   _id: user._id,
@@ -167,5 +168,34 @@ export const discoverUsers = async (req, res) => {
   } catch (error) {
     console.error('discoverUsers error:', error.message);
     return res.status(500).json({ message: 'Failed to discover users' });
+  }
+};
+
+export const deleteMyAccount = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    await Idea.deleteMany({ user: userId });
+
+    await Idea.updateMany(
+      {},
+      {
+        $pull: {
+          likes: userId,
+          comments: { user: userId },
+        },
+      }
+    );
+
+    await ConnectionRequest.deleteMany({
+      $or: [{ fromUser: userId }, { toUser: userId }],
+    });
+
+    await User.deleteOne({ _id: userId });
+
+    return res.json({ message: 'Account deleted successfully' });
+  } catch (error) {
+    console.error('deleteMyAccount error:', error.message);
+    return res.status(500).json({ message: 'Failed to delete account' });
   }
 };

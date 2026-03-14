@@ -17,31 +17,20 @@ export default function CommentDrawer({
   const [error, setError] = useState('');
 
   const safeIdeaId = idea?._id || idea?.id;
-  const commentsCount =
-    typeof idea?.commentsCount === 'number'
-      ? idea.commentsCount
-      : Array.isArray(idea?.comments)
-      ? idea.comments.length
-      : 0;
 
   const loadComments = async (targetPage = 1, append = false) => {
     if (!safeIdeaId) return;
 
     try {
       setError('');
-
-      if (append) {
-        setLoadingMore(true);
-      } else {
-        setLoading(true);
-      }
+      if (append) setLoadingMore(true);
+      else setLoading(true);
 
       const { data } = await api.get(
         `/ideas/${safeIdeaId}/comments?page=${targetPage}&limit=10`
       );
 
       const incoming = Array.isArray(data?.comments) ? data.comments : [];
-
       setComments((prev) => (append ? [...prev, ...incoming] : incoming));
       setPage(data?.page || targetPage);
       setHasMore(Boolean(data?.hasMore));
@@ -104,38 +93,17 @@ export default function CommentDrawer({
   if (!open || !idea) return null;
 
   return (
-    <div className="comment-drawer-overlay" onClick={onClose}>
-      <div
-        className="comment-drawer"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="comment-drawer-handle" />
+    <div className="sf-drawer-overlay" onClick={onClose}>
+      <div className="sf-drawer" onClick={(e) => e.stopPropagation()}>
+        <div className="sf-drawer-handle" />
 
-        <div className="comment-drawer-head">
-          <div className="comment-drawer-title-wrap">
-            <h3 className="comment-drawer-title">{idea.title || 'Comments'}</h3>
-            <p className="comment-drawer-subtitle">
-              {commentsCount} {commentsCount === 1 ? 'comment' : 'comments'}
-            </p>
-          </div>
-
-          <button
-            type="button"
-            className="comment-drawer-close"
-            onClick={onClose}
-            aria-label="Close comments"
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="comment-drawer-idea-meta">
-          <p>{idea.description || 'No description available.'}</p>
+        <div className="sf-drawer-header">
+          <strong>{idea.title || 'Comments'}</strong>
         </div>
 
         {error ? <div className="error-box">{error}</div> : null}
 
-        <div className="comment-drawer-body">
+        <div className="sf-drawer-comments">
           {loading ? (
             <div className="card empty-state">Loading comments...</div>
           ) : comments.length === 0 ? (
@@ -145,37 +113,20 @@ export default function CommentDrawer({
             </div>
           ) : (
             <>
-              <div className="comment-drawer-list">
-                {comments.map((item, index) => {
-                  const name = item?.user?.name || 'User';
-                  const avatar =
-                    name
-                      .split(' ')
-                      .map((part) => part[0])
-                      .join('')
-                      .slice(0, 2)
-                      .toUpperCase() || 'U';
-
-                  return (
-                    <div
-                      key={item?._id || `${item?.comment}-${index}`}
-                      className="comment-drawer-item"
-                    >
-                      <div className="comment-drawer-avatar">{avatar}</div>
-
-                      <div className="comment-drawer-content">
-                        <strong>{name}</strong>
-                        <span>{item?.comment || ''}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              {comments.map((item, index) => (
+                <div
+                  key={item?._id || `${item?.comment}-${index}`}
+                  className="sf-comment-item"
+                >
+                  <strong>{item?.user?.name || 'User'}</strong>
+                  <span>{item?.comment || ''}</span>
+                </div>
+              ))}
 
               {hasMore ? (
                 <button
                   type="button"
-                  className="ghost-btn comment-drawer-load-more"
+                  className="ghost-btn"
                   onClick={handleLoadMore}
                   disabled={loadingMore}
                 >
@@ -186,7 +137,7 @@ export default function CommentDrawer({
           )}
         </div>
 
-        <div className="comment-drawer-composer">
+        <div className="sf-comment-composer">
           <input
             value={comment}
             onChange={(e) => setComment(e.target.value)}
@@ -195,7 +146,7 @@ export default function CommentDrawer({
 
           <button
             type="button"
-            className="primary-btn"
+            className="primary-btn sf-send-btn"
             onClick={handleSend}
             disabled={sending || !comment.trim()}
           >
@@ -205,4 +156,4 @@ export default function CommentDrawer({
       </div>
     </div>
   );
-              }
+}

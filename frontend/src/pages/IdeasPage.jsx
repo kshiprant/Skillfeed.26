@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import IdeaCard from '../components/IdeaCard';
 import api from '../api/client';
@@ -30,10 +30,10 @@ export default function IdeasPage() {
   const [joining, setJoining] = useState(false);
   const [joinMessage, setJoinMessage] = useState('');
 
-  const loadIdeas = async () => {
+  const loadIdeas = useCallback(async () => {
     try {
       setLoading(true);
-      const { data } = await api.get('/ideas');
+      const { data } = await api.get('/ideas?limit=10');
       setIdeas(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load ideas:', err);
@@ -42,11 +42,11 @@ export default function IdeasPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadIdeas();
-  }, []);
+  }, [loadIdeas]);
 
   const createIdea = async (e) => {
     e.preventDefault();
@@ -112,8 +112,17 @@ export default function IdeasPage() {
 
   const addComment = async (id, comment) => {
     try {
-      await api.post(`/ideas/${id}/comment`, { text: comment });
-      loadIdeas();
+      const { data } = await api.post(`/ideas/${id}/comment`, { text: comment });
+
+      if (data?.idea) {
+        setIdeas((prev) =>
+          prev.map((idea) =>
+            String(idea._id || idea.id) === String(id) ? data.idea : idea
+          )
+        );
+      } else {
+        loadIdeas();
+      }
     } catch (err) {
       console.error('Failed to add comment:', err);
     }
@@ -160,7 +169,6 @@ export default function IdeasPage() {
       setJoinMessage('Join request sent successfully.');
       setJoinIdea(null);
       setJoinForm(initialJoinForm);
-      loadIdeas();
     } catch (err) {
       console.error('Failed to send join request:', err);
       setJoinMessage(
@@ -310,4 +318,4 @@ export default function IdeasPage() {
       </section>
     </Layout>
   );
-        }
+}

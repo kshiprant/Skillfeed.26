@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Layout from '../components/Layout';
 import IdeaCard from '../components/IdeaCard';
+import CommentDrawer from '../components/CommentDrawer';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
@@ -38,6 +39,8 @@ export default function IdeasPage() {
   const [joinForm, setJoinForm] = useState(initialJoinForm);
   const [joining, setJoining] = useState(false);
   const [joinMessage, setJoinMessage] = useState('');
+
+  const [selectedIdea, setSelectedIdea] = useState(null);
 
   const previewTags = useMemo(() => toPreviewList(form.tags), [form.tags]);
   const previewLookingFor = useMemo(
@@ -113,7 +116,7 @@ export default function IdeasPage() {
           String(idea._id || idea.id) === String(id)
             ? {
                 ...idea,
-                likes: data.likes,
+                likesCount: data.likes,
                 liked: data.liked,
                 score: data.score,
               }
@@ -133,6 +136,18 @@ export default function IdeasPage() {
         setIdeas((prev) =>
           prev.map((idea) =>
             String(idea._id || idea.id) === String(id) ? data.idea : idea
+          )
+        );
+      } else if (data?.commentsCount !== undefined || data?.latestComments) {
+        setIdeas((prev) =>
+          prev.map((idea) =>
+            String(idea._id || idea.id) === String(id)
+              ? {
+                  ...idea,
+                  commentsCount: data?.commentsCount ?? idea.commentsCount,
+                  latestComments: data?.latestComments ?? idea.latestComments,
+                }
+              : idea
           )
         );
       } else {
@@ -194,12 +209,47 @@ export default function IdeasPage() {
     }
   };
 
+  const openCommentsDrawer = (idea) => {
+    setSelectedIdea(idea);
+  };
+
+  const closeCommentsDrawer = () => {
+    setSelectedIdea(null);
+  };
+
+  const handleDrawerCommentAdded = (ideaId, data) => {
+    setIdeas((prev) =>
+      prev.map((idea) =>
+        String(idea._id || idea.id) === String(ideaId)
+          ? {
+              ...idea,
+              commentsCount: data?.commentsCount ?? idea.commentsCount,
+              latestComments: data?.latestComments ?? idea.latestComments,
+            }
+          : idea
+      )
+    );
+
+    setSelectedIdea((prev) =>
+      prev && String(prev._id || prev.id) === String(ideaId)
+        ? {
+            ...prev,
+            commentsCount: data?.commentsCount ?? prev.commentsCount,
+            latestComments: data?.latestComments ?? prev.latestComments,
+          }
+        : prev
+    );
+  };
+
   return (
     <Layout
       title="Startup ideas"
       subtitle="Post what you want to build and discover collaborators."
     >
-      <form className="card idea-composer idea-composer-upgraded" onSubmit={createIdea}>
+      <form
+        className="card idea-composer idea-composer-upgraded"
+        onSubmit={createIdea}
+      >
         <div className="idea-composer-head">
           <div className="composer-avatar">
             {(user?.name || 'U').charAt(0).toUpperCase()}
@@ -280,7 +330,10 @@ export default function IdeasPage() {
             {previewLookingFor.length > 0 ? (
               <div className="composer-preview-row">
                 {previewLookingFor.map((item, index) => (
-                  <span key={`${item}-${index}`} className="composer-preview-chip subtle">
+                  <span
+                    key={`${item}-${index}`}
+                    className="composer-preview-chip subtle"
+                  >
                     {item}
                   </span>
                 ))}
@@ -295,7 +348,11 @@ export default function IdeasPage() {
           <span className="muted">
             Tip: be specific about the role, skill, or contribution you need.
           </span>
-          <button className="primary-btn composer-submit-btn" type="submit" disabled={posting}>
+          <button
+            className="primary-btn composer-submit-btn"
+            type="submit"
+            disabled={posting}
+          >
             {posting ? 'Posting...' : 'Post Idea'}
           </button>
         </div>
@@ -365,7 +422,7 @@ export default function IdeasPage() {
               key={idea._id || idea.id}
               idea={idea}
               onLike={likeIdea}
-              onComment={addComment}
+              onOpenComments={openCommentsDrawer}
               onJoin={openJoinRequest}
               onDelete={deleteIdea}
               userId={user?._id}
@@ -373,6 +430,13 @@ export default function IdeasPage() {
           ))
         )}
       </section>
+
+      <CommentDrawer
+        open={Boolean(selectedIdea)}
+        idea={selectedIdea}
+        onClose={closeCommentsDrawer}
+        onCommentAdded={handleDrawerCommentAdded}
+      />
     </Layout>
   );
 }

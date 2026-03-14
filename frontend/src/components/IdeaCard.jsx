@@ -1,18 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useMemo, memo } from 'react';
 
-export default function IdeaCard({
+function IdeaCard({
   idea,
   onLike,
-  onComment,
+  onOpenComments,
   onJoin,
   onDelete,
   userId,
 }) {
-  const [comment, setComment] = useState('');
-  const [sending, setSending] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [showComposer, setShowComposer] = useState(false);
-
   const safeId = idea?._id || idea?.id;
 
   const authorName =
@@ -28,14 +23,29 @@ export default function IdeaCard({
   const description = idea?.description || 'No description added yet.';
   const stage = idea?.stage || 'Idea';
   const tags = Array.isArray(idea?.tags) ? idea.tags : [];
-  const comments = Array.isArray(idea?.comments) ? idea.comments : [];
   const joinRequestsCount = idea?.joinRequestsCount || 0;
 
-  const likeCount = Array.isArray(idea?.likes)
-    ? idea.likes.length
-    : typeof idea?.likes === 'number'
-    ? idea.likes
-    : 0;
+  const latestComments = Array.isArray(idea?.latestComments)
+    ? idea.latestComments
+    : Array.isArray(idea?.comments)
+    ? idea.comments.slice(-2)
+    : [];
+
+  const commentsCount =
+    typeof idea?.commentsCount === 'number'
+      ? idea.commentsCount
+      : Array.isArray(idea?.comments)
+      ? idea.comments.length
+      : 0;
+
+  const likeCount =
+    typeof idea?.likesCount === 'number'
+      ? idea.likesCount
+      : Array.isArray(idea?.likes)
+      ? idea.likes.length
+      : typeof idea?.likes === 'number'
+      ? idea.likes
+      : 0;
 
   const liked = useMemo(() => {
     if (typeof idea?.liked === 'boolean') return idea.liked;
@@ -66,21 +76,6 @@ export default function IdeaCard({
     onLike?.(safeId);
   };
 
-  const handleComment = async () => {
-    if (!comment.trim() || !safeId) return;
-
-    try {
-      setSending(true);
-      await onComment?.(safeId, comment.trim());
-      setComment('');
-      setShowComposer(false);
-    } catch (error) {
-      console.error('Failed to send comment:', error);
-    } finally {
-      setSending(false);
-    }
-  };
-
   const handleJoin = () => {
     if (!safeId || !onJoin) return;
     onJoin(safeId, idea);
@@ -93,13 +88,15 @@ export default function IdeaCard({
     if (!confirmed) return;
 
     try {
-      setDeleting(true);
       await onDelete(safeId);
     } catch (error) {
       console.error('Failed to delete idea:', error);
-    } finally {
-      setDeleting(false);
     }
+  };
+
+  const handleOpenComments = () => {
+    if (!safeId || !onOpenComments) return;
+    onOpenComments(idea);
   };
 
   return (
@@ -122,9 +119,8 @@ export default function IdeaCard({
             type="button"
             className="sf-delete-chip"
             onClick={handleDelete}
-            disabled={deleting}
           >
-            {deleting ? 'Deleting...' : 'Delete'}
+            Delete
           </button>
         ) : null}
       </div>
@@ -159,10 +155,10 @@ export default function IdeaCard({
         <button
           type="button"
           className="sf-action-btn"
-          onClick={() => setShowComposer((prev) => !prev)}
+          onClick={handleOpenComments}
         >
           <span className="sf-action-icon">💬</span>
-          <span>{comments.length}</span>
+          <span>{commentsCount}</span>
         </button>
 
         <button
@@ -176,39 +172,39 @@ export default function IdeaCard({
         </button>
       </div>
 
-      {comments.length > 0 ? (
+      {latestComments.length > 0 ? (
         <div className="sf-comment-list">
-          {comments.slice(0, 2).map((item, index) => (
-            <div key={item?._id || `${item?.comment}-${index}`} className="sf-comment-item">
+          {latestComments.map((item, index) => (
+            <div
+              key={item?._id || `${item?.comment}-${index}`}
+              className="sf-comment-item"
+            >
               <strong>{item?.user?.name || 'User'}</strong>
               <span>{item?.comment || ''}</span>
             </div>
           ))}
-          {comments.length > 2 ? (
-            <div className="sf-more-comments">+ {comments.length - 2} more comments</div>
+
+          {commentsCount > latestComments.length ? (
+            <button
+              type="button"
+              className="sf-more-comments"
+              onClick={handleOpenComments}
+            >
+              View all {commentsCount} comments
+            </button>
           ) : null}
         </div>
-      ) : null}
-
-      {showComposer ? (
-        <div className="sf-comment-composer">
-          <input
-            id={`comment-input-${safeId}`}
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Write a comment..."
-          />
-
-          <button
-            className="primary-btn sf-send-btn"
-            type="button"
-            onClick={handleComment}
-            disabled={sending || !comment.trim()}
-          >
-            {sending ? 'Sending...' : 'Send'}
-          </button>
-        </div>
-      ) : null}
+      ) : (
+        <button
+          type="button"
+          className="sf-more-comments"
+          onClick={handleOpenComments}
+        >
+          Add the first comment
+        </button>
+      )}
     </article>
   );
-      }
+}
+
+export default memo(IdeaCard);

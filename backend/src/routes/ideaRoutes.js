@@ -5,6 +5,7 @@ import {
   addComment,
   createIdea,
   getIdeas,
+  getIdeaComments,
   toggleLike,
   deleteIdea,
 } from '../controllers/ideaController.js';
@@ -40,6 +41,12 @@ router.post(
     body('text').isString().trim().isLength({ min: 1, max: 1000 }),
   ],
   addComment
+);
+
+router.get(
+  '/:id/comments',
+  [param('id').isMongoId()],
+  getIdeaComments
 );
 
 router.delete(

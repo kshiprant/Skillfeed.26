@@ -1140,87 +1140,6 @@ textarea {
   }
 }
 
-@media (max-width: 760px) {
-  .topbar,
-  .person-card,
-  .idea-header,
-  .request-row,
-  .section-head,
-  .feed-item-top {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .inline-form {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .composer-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .idea-composer-head,
-  .composer-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .composer-actions > * {
-    width: 100%;
-    text-align: center;
-  }
-
-  .grid-cards,
-  .messages-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .top-actions {
-    width: 100%;
-    justify-content: stretch;
-  }
-
-  .top-actions > * {
-    width: 100%;
-    text-align: center;
-  }
-
-  .bubble {
-    max-width: 90%;
-  }
-
-  .profile-hero {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .profile-main-top {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .profile-avatar-wrap {
-    display: flex;
-    justify-content: center;
-  }
-
-  .profile-actions {
-    justify-content: stretch;
-    min-width: 0;
-  }
-
-  .profile-actions > * {
-    width: 100%;
-  }
-
-  .profile-card {
-    padding: 18px;
-  }
-
-  .chat-panel {
-    min-height: auto;
-  }
 
   .chat-messages {
     min-height: 260px;
@@ -1469,4 +1388,189 @@ textarea {
     padding-bottom: 8px;
   }
 }
- 
+ @media (max-width: 640px) {
+  .sf-idea-card {
+    padding: 16px;
+    gap: 13px;
+    border-radius: 24px;
+  }
+
+  .sf-idea-top {
+    align-items: flex-start;
+  }
+
+  .sf-idea-author {
+    align-items: center;
+    min-width: 0;
+  }
+
+  .sf-idea-avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 1rem;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.08);
+  }
+
+  .sf-idea-author-meta {
+    gap: 3px;
+  }
+
+  .sf-idea-author-meta strong {
+    font-size: 0.95rem;
+    line-height: 1.1;
+  }
+
+  .sf-idea-author-meta span {
+    font-size: 0.9rem;
+  }
+
+  .sf-owner-badge {
+    padding: 4px 10px;
+    font-size: 0.72rem !important;
+  }
+
+  .sf-delete-chip {
+    min-width: 0;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    background: rgba(220, 38, 38, 0.03);
+  }
+
+  .sf-idea-title {
+    font-size: 1.38rem;
+    line-height: 1.02;
+    letter-spacing: -0.04em;
+  }
+
+  .sf-idea-description {
+    font-size: 0.98rem;
+    line-height: 1.5;
+  }
+
+  .sf-stage-pill {
+    padding: 7px 12px;
+    font-size: 0.78rem;
+  }
+
+  .sf-tag-row {
+    gap: 8px;
+  }
+
+  .sf-tag {
+    padding: 7px 12px;
+    font-size: 0.88rem;
+  }
+
+  .sf-stats-row {
+    gap: 14px;
+    font-size: 0.93rem;
+  }
+
+  .sf-action-row {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .sf-action-btn {
+    min-height: 52px;
+    padding: 11px 8px;
+    font-size: 0.95rem;
+    gap: 6px;
+    border-radius: 16px;
+  }
+
+  .sf-action-icon {
+    font-size: 0.96rem;
+  }
+
+  .sf-comment-list {
+    gap: 8px;
+  }
+
+  .sf-comment-item {
+    border-radius: 15px;
+    padding: 11px 12px;
+  }
+
+  .sf-comment-item strong {
+    font-size: 0.9rem;
+  }
+
+  .sf-comment-item span {
+    font-size: 0.93rem;
+    line-height: 1.42;
+  }
+
+  .sf-comment-composer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 9px;
+  }
+
+  .sf-comment-composer input {
+    min-height: 50px;
+  }
+
+  .sf-send-btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .landing {
+    padding: 18px 14px 30px;
+  }
+
+  .landing-nav {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .landing-nav-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .hero-copy-card,
+  .hero-preview-card,
+  .landing-feature-card,
+  .landing-metric-card,
+  .landing-cta-card {
+    border-radius: 22px;
+  }
+
+  .hero-copy-card {
+    padding: 22px 18px;
+  }
+
+  .hero-preview-card,
+  .landing-feature-card,
+  .landing-metric-card,
+  .landing-cta-card {
+    padding: 18px;
+  }
+
+  .hero-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .hero-actions > * {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .hero-title {
+    font-size: clamp(2.6rem, 12vw, 4.2rem);
+  }
+
+  .landing-section-head {
+    text-align: left;
+    margin: 0;
+  }
+
+  .landing-footer {
+    padding-bottom: 8px;
+  }
+ }

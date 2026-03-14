@@ -142,25 +142,6 @@ export default function LandingPage() {
         </section>
 
         <section className="landing-section">
-          <div className="landing-metrics-grid">
-            <div className="landing-metric-card">
-              <div className="landing-metric-value">Ideas</div>
-              <div className="landing-metric-label">Share what you want to build</div>
-            </div>
-
-            <div className="landing-metric-card">
-              <div className="landing-metric-value">People</div>
-              <div className="landing-metric-label">Find collaborators with useful skills</div>
-            </div>
-
-            <div className="landing-metric-card">
-              <div className="landing-metric-value">Chat</div>
-              <div className="landing-metric-label">Start real conversations quickly</div>
-            </div>
-          </div>
-        </section>
-
-        <section className="landing-section">
           <div className="landing-cta-card">
             <h2>Start building today</h2>
             <p>

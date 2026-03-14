@@ -16,25 +16,29 @@ const protect = async (req, res, next) => {
       return res.status(401).json({ message: 'Not authorized' });
     }
 
+    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET, {
       issuer: 'skillfeed-api',
       audience: 'skillfeed-app',
     });
 
+    // Validate token payload
     if (!decoded?.sub || !mongoose.Types.ObjectId.isValid(decoded.sub)) {
       return res.status(401).json({ message: 'Invalid token payload' });
     }
 
-    const user = await User.findById(decoded.sub).select(
-      '_id name email headline bio skills city avatarUrl role links createdAt updatedAt'
-    );
+    // Fetch only required user fields (lighter query)
+    const user = await User.findById(decoded.sub)
+      .select('_id name email headline avatarUrl role')
+      .lean();
 
     if (!user) {
       return res.status(401).json({ message: 'User not found' });
     }
 
     req.user = user;
-    return next();
+
+    next();
   } catch (error) {
     console.error('protect middleware error:', error.message);
 

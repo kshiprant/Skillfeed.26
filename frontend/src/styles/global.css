@@ -90,3 +90,51 @@ textarea{resize:vertical}
 .sf-comment-composer{flex-direction:column;align-items:stretch}
 .sf-send-btn{width:100%;min-width:0}
 }
+/* Comment Drawer */
+
+.sf-drawer-overlay{
+position:fixed;
+inset:0;
+background:rgba(15,23,42,.35);
+display:flex;
+align-items:flex-end;
+justify-content:center;
+z-index:999
+}
+
+.sf-drawer{
+width:100%;
+max-width:980px;
+background:#fff;
+border-radius:26px 26px 0 0;
+padding:16px;
+display:flex;
+flex-direction:column;
+gap:12px;
+max-height:70vh;
+box-shadow:0 -10px 30px rgba(15,23,42,.15)
+}
+
+.sf-drawer-handle{
+width:42px;
+height:5px;
+border-radius:999px;
+background:#cbd5e1;
+margin:0 auto
+}
+
+.sf-drawer-header{
+display:flex;
+align-items:center;
+justify-content:center;
+font-weight:800;
+color:#0f172a
+}
+
+.sf-drawer-comments{
+overflow-y:auto;
+display:flex;
+flex-direction:column;
+gap:10px;
+padding-top:4px
+}

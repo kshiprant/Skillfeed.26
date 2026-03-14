@@ -83,6 +83,55 @@ export const getIdeas = async (req, res) => {
   }
 };
 
+export const getIdeaComments = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const rawPage = Number(req.query.page);
+    const rawLimit = Number(req.query.limit);
+
+    const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
+    const limit =
+      Number.isFinite(rawLimit) && rawLimit > 0
+        ? Math.min(rawLimit, 20)
+        : 10;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid idea ID' });
+    }
+
+    const idea = await Idea.findById(id)
+      .populate('comments.user', 'name avatarUrl')
+      .select('comments')
+      .lean();
+
+    if (!idea) {
+      return res.status(404).json({ message: 'Idea not found' });
+    }
+
+    const comments = Array.isArray(idea.comments) ? idea.comments : [];
+    const total = comments.length;
+
+    const sortedComments = [...comments].sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+
+    const start = (page - 1) * limit;
+    const paginatedComments = sortedComments.slice(start, start + limit);
+
+    return res.json({
+      comments: paginatedComments,
+      page,
+      limit,
+      total,
+      hasMore: start + limit < total,
+    });
+  } catch (error) {
+    console.error('getIdeaComments error:', error.message);
+    return res.status(500).json({ message: 'Failed to load comments' });
+  }
+};
+
 export const toggleLike = async (req, res) => {
   try {
     const { id } = req.params;
@@ -164,12 +213,18 @@ export const addComment = async (req, res) => {
     await idea.save();
 
     const updatedIdea = await Idea.findById(id)
-      .populate('user', 'name headline avatarUrl')
-      .populate('comments.user', 'name avatarUrl');
+      .populate('comments.user', 'name avatarUrl')
+      .select('comments');
 
-    const latestComment = updatedIdea.comments[updatedIdea.comments.length - 1];
+    const comments = Array.isArray(updatedIdea.comments) ? updatedIdea.comments : [];
+    const latestComments = comments.slice(-2);
+    const newComment = comments[comments.length - 1];
 
-    return res.status(201).json(latestComment);
+    return res.status(201).json({
+      comment: newComment,
+      commentsCount: comments.length,
+      latestComments,
+    });
   } catch (error) {
     console.error('addComment error:', error.message);
     return res.status(500).json({ message: 'Failed to add comment' });

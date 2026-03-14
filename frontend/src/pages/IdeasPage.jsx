@@ -29,6 +29,7 @@ const toPreviewList = (value) =>
 
 export default function IdeasPage() {
   const { user } = useAuth();
+
   const [ideas, setIdeas] = useState([]);
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(true);
@@ -123,6 +124,17 @@ export default function IdeasPage() {
             : idea
         )
       );
+
+      setSelectedIdea((prev) =>
+        prev && String(prev._id || prev.id) === String(id)
+          ? {
+              ...prev,
+              likesCount: data.likes,
+              liked: data.liked,
+              score: data.score,
+            }
+          : prev
+      );
     } catch (err) {
       console.error('Failed to like idea:', err);
     }
@@ -138,6 +150,10 @@ export default function IdeasPage() {
             String(idea._id || idea.id) === String(id) ? data.idea : idea
           )
         );
+
+        setSelectedIdea((prev) =>
+          prev && String(prev._id || prev.id) === String(id) ? data.idea : prev
+        );
       } else if (data?.commentsCount !== undefined || data?.latestComments) {
         setIdeas((prev) =>
           prev.map((idea) =>
@@ -149,6 +165,16 @@ export default function IdeasPage() {
                 }
               : idea
           )
+        );
+
+        setSelectedIdea((prev) =>
+          prev && String(prev._id || prev.id) === String(id)
+            ? {
+                ...prev,
+                commentsCount: data?.commentsCount ?? prev.commentsCount,
+                latestComments: data?.latestComments ?? prev.latestComments,
+              }
+            : prev
         );
       } else {
         loadIdeas();
@@ -163,6 +189,10 @@ export default function IdeasPage() {
       await api.delete(`/ideas/${id}`);
       setIdeas((prev) =>
         prev.filter((idea) => String(idea._id || idea.id) !== String(id))
+      );
+
+      setSelectedIdea((prev) =>
+        prev && String(prev._id || prev.id) === String(id) ? null : prev
       );
     } catch (err) {
       console.error('Failed to delete idea:', err);

@@ -195,16 +195,12 @@ function IdeaCard({
           ) : null}
         </div>
       ) : (
-        <button
-          type="button"
-          className="sf-more-comments"
-          onClick={handleOpenComments}
-        >
-          Add the first comment
-        </button>
-      )}
-    </article>
-  );
-}
-
-export default memo(IdeaCard);
+  <button
+    type="button"
+    className="sf-first-comment-btn"
+    onClick={handleOpenComments}
+  >
+    <span className="sf-first-comment-icon">💬</span>
+    <span>Start the conversation</span>
+  </button>
+)}

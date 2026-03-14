@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Layout from '../components/Layout';
 import IdeaCard from '../components/IdeaCard';
 import api from '../api/client';
@@ -17,6 +17,15 @@ const initialJoinForm = {
   message: '',
 };
 
+const stageOptions = ['Idea', 'MVP', 'Early Traction', 'Scaling'];
+
+const toPreviewList = (value) =>
+  value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 8);
+
 export default function IdeasPage() {
   const { user } = useAuth();
   const [ideas, setIdeas] = useState([]);
@@ -29,6 +38,12 @@ export default function IdeasPage() {
   const [joinForm, setJoinForm] = useState(initialJoinForm);
   const [joining, setJoining] = useState(false);
   const [joinMessage, setJoinMessage] = useState('');
+
+  const previewTags = useMemo(() => toPreviewList(form.tags), [form.tags]);
+  const previewLookingFor = useMemo(
+    () => toPreviewList(form.lookingFor),
+    [form.lookingFor]
+  );
 
   const loadIdeas = useCallback(async () => {
     try {
@@ -184,7 +199,7 @@ export default function IdeasPage() {
       title="Startup ideas"
       subtitle="Post what you want to build and discover collaborators."
     >
-      <form className="card idea-composer" onSubmit={createIdea}>
+      <form className="card idea-composer idea-composer-upgraded" onSubmit={createIdea}>
         <div className="idea-composer-head">
           <div className="composer-avatar">
             {(user?.name || 'U').charAt(0).toUpperCase()}
@@ -197,48 +212,90 @@ export default function IdeasPage() {
           </div>
         </div>
 
-        <input
-          placeholder="Give your idea a strong title"
-          value={form.title}
-          onChange={(e) => setForm({ ...form, title: e.target.value })}
-        />
-
-        <textarea
-          placeholder="Describe the problem, your solution, and why it matters..."
-          rows="5"
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-        />
-
-        <div className="composer-grid">
-          <select
-            value={form.stage}
-            onChange={(e) => setForm({ ...form, stage: e.target.value })}
-          >
-            <option>Idea</option>
-            <option>MVP</option>
-            <option>Early Traction</option>
-            <option>Scaling</option>
-          </select>
-
+        <div className="composer-section">
+          <label className="composer-label">Idea title</label>
           <input
-            placeholder="Tags, comma separated"
-            value={form.tags}
-            onChange={(e) => setForm({ ...form, tags: e.target.value })}
+            placeholder="Give your idea a strong title"
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
           />
         </div>
 
-        <input
-          placeholder="Looking for, comma separated"
-          value={form.lookingFor}
-          onChange={(e) => setForm({ ...form, lookingFor: e.target.value })}
-        />
+        <div className="composer-section">
+          <label className="composer-label">Description</label>
+          <textarea
+            className="composer-textarea"
+            placeholder="Describe the problem, your solution, who it is for, and why it matters..."
+            rows="6"
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+          />
+          <span className="composer-helper">
+            Explain the idea clearly so the right people want to join.
+          </span>
+        </div>
+
+        <div className="composer-section">
+          <label className="composer-label">Stage</label>
+          <div className="stage-chip-row">
+            {stageOptions.map((stage) => (
+              <button
+                key={stage}
+                type="button"
+                className={`stage-chip ${form.stage === stage ? 'active' : ''}`}
+                onClick={() => setForm({ ...form, stage })}
+              >
+                {stage}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="composer-grid upgraded">
+          <div className="composer-section">
+            <label className="composer-label">Tags</label>
+            <input
+              placeholder="React, AI, Fintech"
+              value={form.tags}
+              onChange={(e) => setForm({ ...form, tags: e.target.value })}
+            />
+            {previewTags.length > 0 ? (
+              <div className="composer-preview-row">
+                {previewTags.map((tag, index) => (
+                  <span key={`${tag}-${index}`} className="composer-preview-chip">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="composer-section">
+            <label className="composer-label">Looking for</label>
+            <input
+              placeholder="Designer, Frontend, Marketer"
+              value={form.lookingFor}
+              onChange={(e) => setForm({ ...form, lookingFor: e.target.value })}
+            />
+            {previewLookingFor.length > 0 ? (
+              <div className="composer-preview-row">
+                {previewLookingFor.map((item, index) => (
+                  <span key={`${item}-${index}`} className="composer-preview-chip subtle">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </div>
 
         {error && <div className="error-box">{error}</div>}
 
-        <div className="composer-actions">
-          <span className="muted">Tip: mention the role or skill you need.</span>
-          <button className="primary-btn" type="submit" disabled={posting}>
+        <div className="composer-actions upgraded">
+          <span className="muted">
+            Tip: be specific about the role, skill, or contribution you need.
+          </span>
+          <button className="primary-btn composer-submit-btn" type="submit" disabled={posting}>
             {posting ? 'Posting...' : 'Post Idea'}
           </button>
         </div>

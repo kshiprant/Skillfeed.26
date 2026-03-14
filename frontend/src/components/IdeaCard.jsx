@@ -204,3 +204,8 @@ function IdeaCard({
     <span>Start the conversation</span>
   </button>
 )}
+</article>
+  );
+}
+
+export default memo(IdeaCard);

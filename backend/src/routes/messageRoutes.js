@@ -46,19 +46,23 @@ router.get('/', protect, async (req, res) => {
       .populate('members', 'name headline avatarUrl')
       .sort({ lastMessageAt: -1, updatedAt: -1 });
 
-    const result = conversations.map((conversation) => {
-      const otherUser = conversation.members.find(
-        (member) => String(member._id) !== String(req.user._id)
-      );
+    const result = conversations
+  .map((conversation) => {
+    const otherUser = conversation.members.find(
+      (member) => String(member._id) !== String(req.user._id)
+    );
 
-      return {
-        _id: conversation._id,
-        user: otherUser || null,
-        lastMessage: conversation.lastMessage || '',
-        lastMessageAt: conversation.lastMessageAt || null,
-        updatedAt: conversation.updatedAt,
-      };
-    });
+    if (!otherUser?._id) return null;
+
+    return {
+      _id: conversation._id,
+      user: otherUser,
+      lastMessage: conversation.lastMessage || '',
+      lastMessageAt: conversation.lastMessageAt || null,
+      updatedAt: conversation.updatedAt,
+    };
+  })
+  .filter(Boolean);
 
     res.json(result);
   } catch (error) {

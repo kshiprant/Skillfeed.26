@@ -1,17 +1,13 @@
-import axios from 'axios';
+import { io } from "socket.io-client";
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
+const SOCKET_URL =
+  import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+
+export const socket = io(SOCKET_URL, {
+  autoConnect: false,
+  withCredentials: true,
+  reconnection: true,
+  reconnectionAttempts: 5,
+  reconnectionDelay: 1000,
+  transports: ["websocket", "polling"],
 });
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('skillfeed_token');
-
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-
-  return config;
-});
-
-export default api;

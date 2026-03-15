@@ -92,13 +92,13 @@ export default function ProfilePage() {
       name: source.name || '',
       headline: source.headline || '',
       bio: source.bio || '',
-      skills: (source.skills || []).join(', '),
+      skills: Array.isArray(source.skills) ? source.skills.join(', ') : '',
       city: source.city || '',
       avatarUrl: source.avatarUrl || '',
       role: source.role || '',
-      instagram: source.links?.instagram || '',
-      linkedin: source.links?.linkedin || '',
-      portfolio: source.links?.portfolio || '',
+      instagram: source.instagram || source.links?.instagram || '',
+      linkedin: source.linkedin || source.links?.linkedin || '',
+      portfolio: source.portfolio || source.links?.portfolio || '',
     });
   }, [user, profile, isOwnProfile]);
 
@@ -110,9 +110,9 @@ export default function ProfilePage() {
 
   const profileLinks = useMemo(() => {
     return [
-      { label: 'Instagram', value: activeProfile?.links?.instagram },
-      { label: 'LinkedIn', value: activeProfile?.links?.linkedin },
-      { label: 'Portfolio', value: activeProfile?.links?.portfolio },
+      { label: 'Instagram', value: activeProfile?.instagram || activeProfile?.links?.instagram },
+      { label: 'LinkedIn', value: activeProfile?.linkedin || activeProfile?.links?.linkedin },
+      { label: 'Portfolio', value: activeProfile?.portfolio || activeProfile?.links?.portfolio },
     ].filter((item) => item.value);
   }, [activeProfile]);
 
@@ -136,25 +136,47 @@ export default function ProfilePage() {
     setError('');
 
     try {
+      const trimmedName = form.name.trim();
+      const trimmedHeadline = form.headline.trim();
+      const trimmedBio = form.bio.trim();
+      const trimmedCity = form.city.trim();
+      const trimmedAvatarUrl = form.avatarUrl.trim();
+      const trimmedRole = form.role.trim();
+      const trimmedInstagram = form.instagram.trim();
+      const trimmedLinkedin = form.linkedin.trim();
+      const trimmedPortfolio = form.portfolio.trim();
+
+      if (!trimmedName) {
+        setError('Name is required.');
+        setSaving(false);
+        return;
+      }
+
+      if (trimmedName.length < 2) {
+        setError('Name must be at least 2 characters.');
+        setSaving(false);
+        return;
+      }
+
       const payload = {
-        name: form.name,
-        headline: form.headline,
-        bio: form.bio,
-        city: form.city,
-        avatarUrl: form.avatarUrl,
-        role: form.role,
+        name: trimmedName,
+        headline: trimmedHeadline,
+        bio: trimmedBio,
+        city: trimmedCity,
+        role: trimmedRole,
         skills: form.skills
           .split(',')
           .map((s) => s.trim())
           .filter(Boolean),
-        links: {
-          instagram: form.instagram,
-          linkedin: form.linkedin,
-          portfolio: form.portfolio,
-        },
       };
 
+      if (trimmedAvatarUrl) payload.avatarUrl = trimmedAvatarUrl;
+      if (trimmedInstagram) payload.instagram = trimmedInstagram;
+      if (trimmedLinkedin) payload.linkedin = trimmedLinkedin;
+      if (trimmedPortfolio) payload.portfolio = trimmedPortfolio;
+
       const { data } = await api.put('/users/me', payload);
+
       setUser(data);
       setProfile(data);
       setSaved('Profile updated successfully.');
@@ -162,8 +184,9 @@ export default function ProfilePage() {
       setTimeout(() => setSaved(''), 2500);
     } catch (err) {
       console.error('Failed to update profile:', err);
+      console.log('Backend error response:', err.response?.data);
       setError(err.response?.data?.message || 'Could not update profile.');
-      setTimeout(() => setError(''), 2500);
+      setTimeout(() => setError(''), 3000);
     } finally {
       setSaving(false);
     }
@@ -250,7 +273,7 @@ export default function ProfilePage() {
                 <div className="profile-identity">
                   <h2>{activeProfile.name || 'Profile'}</h2>
                   <p className="profile-headline">
-                    {activeProfile.headline || activeProfile.role || 'Member'}
+                    {activeProfile.headline || 'Member'}
                   </p>
 
                   {(activeProfile.role || activeProfile.city) && (
@@ -411,4 +434,4 @@ export default function ProfilePage() {
       </section>
     </Layout>
   );
-}
+            }

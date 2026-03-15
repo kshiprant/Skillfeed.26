@@ -168,9 +168,14 @@ export default function MessagesPage() {
   const onSend = async (text) => {
     const safeText = typeof text === 'string' ? text.trim() : '';
 
-    if (!safeText || !activeConversation?.user?._id || sendingMessage) {
-      return false;
-    }
+    if (!safeText || sendingMessage) {
+  return false;
+}
+
+if (!activeConversation?.user?._id) {
+  setError('This conversation is broken. Please refresh or reconnect with this user.');
+  return false;
+}
 
     setError('');
     setSendingMessage(true);

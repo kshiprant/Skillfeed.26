@@ -24,7 +24,9 @@ const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export const updateProfile = async (req, res) => {
   try {
+
     const errors = validationResult(req);
+
     if (!errors.isEmpty()) {
       return res.status(400).json({
         message: 'Invalid input',
@@ -35,9 +37,10 @@ export const updateProfile = async (req, res) => {
       });
     }
 
-    const allowed = ['name', 'headline', 'bio', 'skills', 'city', 'avatarUrl', 'role', 'links'];
+    const allowed = ['name','headline','bio','skills','city','avatarUrl','role','links'];
 
     for (const key of allowed) {
+
       if (req.body[key] === undefined) continue;
 
       if (key === 'skills') {
@@ -45,35 +48,49 @@ export const updateProfile = async (req, res) => {
           ? req.body.skills
               .map((item) => (typeof item === 'string' ? item.trim() : ''))
               .filter(Boolean)
-              .slice(0, 30)
+              .slice(0,30)
           : [];
         continue;
       }
 
       if (key === 'links') {
+
         const links = req.body.links || {};
+
         req.user.links = {
           instagram: typeof links.instagram === 'string' ? links.instagram.trim() : '',
           linkedin: typeof links.linkedin === 'string' ? links.linkedin.trim() : '',
           portfolio: typeof links.portfolio === 'string' ? links.portfolio.trim() : '',
         };
+
         continue;
       }
 
       req.user[key] =
-        typeof req.body[key] === 'string' ? req.body[key].trim() : req.body[key];
+        typeof req.body[key] === 'string'
+          ? req.body[key].trim()
+          : req.body[key];
     }
 
-    const updated = await req.user.save();
+    // 🔧 CRITICAL FIX
+    const updated = await req.user.save({ validateModifiedOnly: true });
+
     return res.json(sanitizeUser(updated));
+
   } catch (error) {
-    console.error('updateProfile error:', error.message);
-    return res.status(500).json({ message: 'Failed to update profile' });
+
+    console.error('updateProfile error:', error);
+
+    return res.status(500).json({
+      message: 'Failed to update profile',
+      error: error.message
+    });
   }
 };
 
 export const getMyProfile = async (req, res) => {
   try {
+
     const user = await User.findById(req.user._id).select(
       '_id name email headline bio skills city avatarUrl role links openToCollaborate createdAt updatedAt'
     );
@@ -86,14 +103,18 @@ export const getMyProfile = async (req, res) => {
       ...sanitizeUser(user),
       email: user.email,
     });
+
   } catch (error) {
+
     console.error('getMyProfile error:', error.message);
+
     return res.status(500).json({ message: 'Failed to load profile' });
   }
 };
 
 export const getUserById = async (req, res) => {
   try {
+
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -109,16 +130,20 @@ export const getUserById = async (req, res) => {
     }
 
     return res.json(sanitizeUser(user));
+
   } catch (error) {
+
     console.error('getUserById error:', error.message);
+
     return res.status(500).json({ message: 'Failed to load user' });
   }
 };
 
 export const discoverUsers = async (req, res) => {
   try {
+
     const rawQuery = typeof req.query.q === 'string' ? req.query.q.trim() : '';
-    const q = rawQuery.slice(0, 50);
+    const q = rawQuery.slice(0,50);
 
     const baseFilter = {
       _id: { $ne: req.user._id },
@@ -127,7 +152,9 @@ export const discoverUsers = async (req, res) => {
     let filter = baseFilter;
 
     if (q) {
-      const safeRegex = new RegExp(escapeRegex(q), 'i');
+
+      const safeRegex = new RegExp(escapeRegex(q),'i');
+
       filter = {
         ...baseFilter,
         $or: [
@@ -144,12 +171,16 @@ export const discoverUsers = async (req, res) => {
       .limit(50);
 
     const relationRows = await ConnectionRequest.find({
-      $or: [{ fromUser: req.user._id }, { toUser: req.user._id }],
+      $or: [
+        { fromUser: req.user._id },
+        { toUser: req.user._id }
+      ]
     }).select('fromUser toUser status');
 
     const relationMap = new Map();
 
     relationRows.forEach((row) => {
+
       const other =
         String(row.fromUser) === String(req.user._id)
           ? String(row.toUser)
@@ -160,42 +191,49 @@ export const discoverUsers = async (req, res) => {
 
     return res.json(
       users.map((user) =>
-        sanitizeUser(user, {
-          relationStatus: relationMap.get(String(user._id)) || 'none',
+        sanitizeUser(user,{
+          relationStatus: relationMap.get(String(user._id)) || 'none'
         })
       )
     );
+
   } catch (error) {
+
     console.error('discoverUsers error:', error.message);
+
     return res.status(500).json({ message: 'Failed to discover users' });
   }
 };
 
 export const deleteMyAccount = async (req, res) => {
   try {
+
     const userId = req.user._id;
 
     await Idea.deleteMany({ user: userId });
 
-    await Idea.updateMany(
-      {},
-      {
-        $pull: {
-          likes: userId,
-          comments: { user: userId },
-        },
+    await Idea.updateMany({},{
+      $pull:{
+        likes: userId,
+        comments:{ user: userId }
       }
-    );
-
-    await ConnectionRequest.deleteMany({
-      $or: [{ fromUser: userId }, { toUser: userId }],
     });
 
-    await User.deleteOne({ _id: userId });
+    await ConnectionRequest.deleteMany({
+      $or:[
+        { fromUser:userId },
+        { toUser:userId }
+      ]
+    });
 
-    return res.json({ message: 'Account deleted successfully' });
+    await User.deleteOne({ _id:userId });
+
+    return res.json({ message:'Account deleted successfully' });
+
   } catch (error) {
+
     console.error('deleteMyAccount error:', error.message);
-    return res.status(500).json({ message: 'Failed to delete account' });
+
+    return res.status(500).json({ message:'Failed to delete account' });
   }
 };

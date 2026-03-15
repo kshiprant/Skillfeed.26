@@ -25,17 +25,20 @@ export default function MessagesPage() {
 
       const { data } = await api.get('/messages');
       const convoList = Array.isArray(data) ? data : [];
+      const validConversations = convoList.filter((item) => item?.user?._id);
 
-      setConversations(convoList);
+      setConversations(validConversations);
 
-      if (!convoList.length) {
+      if (!validConversations.length) {
         setActiveConversation(null);
         setMessages([]);
         return;
       }
 
       if (preserveActiveId) {
-        const matched = convoList.find((item) => item._id === preserveActiveId);
+        const matched = validConversations.find(
+          (item) => item._id === preserveActiveId
+        );
         if (matched) {
           setActiveConversation(matched);
           return;
@@ -44,10 +47,12 @@ export default function MessagesPage() {
 
       setActiveConversation((prev) => {
         if (prev?._id) {
-          const matched = convoList.find((item) => item._id === prev._id);
-          return matched || convoList[0];
+          const matched = validConversations.find(
+            (item) => item._id === prev._id
+          );
+          return matched || validConversations[0];
         }
-        return convoList[0];
+        return validConversations[0];
       });
     } catch (err) {
       console.error('Failed to load conversations:', err);
@@ -69,12 +74,16 @@ export default function MessagesPage() {
 
     socket.auth = { token };
 
-    if (!socket.connected) {
-      socket.connect();
-    }
+    const handleConnect = () => {
+      if (joinedConversationRef.current) {
+        socket.emit('join_conversation', {
+          conversationId: joinedConversationRef.current,
+        });
+      }
+    };
 
     const handleMessageNew = ({ conversationId, message }) => {
-      if (String(activeConversation?._id) === String(conversationId)) {
+      if (String(joinedConversationRef.current) === String(conversationId)) {
         setMessages((prev) => {
           const alreadyExists = prev.some(
             (item) => String(item._id) === String(message._id)
@@ -91,10 +100,18 @@ export default function MessagesPage() {
       loadConversations(activeConversation?._id || null);
     };
 
+    socket.on('connect', handleConnect);
     socket.on('message:new', handleMessageNew);
     socket.on('conversation:updated', handleConversationUpdated);
 
+    if (!socket.connected) {
+      socket.connect();
+    } else {
+      handleConnect();
+    }
+
     return () => {
+      socket.off('connect', handleConnect);
       socket.off('message:new', handleMessageNew);
       socket.off('conversation:updated', handleConversationUpdated);
     };
@@ -126,7 +143,7 @@ export default function MessagesPage() {
         const nextMessages = Array.isArray(data?.messages) ? data.messages : [];
         setMessages(nextMessages);
 
-        const nextConversationId = data?.conversationId;
+        const nextConversationId = data?.conversationId || null;
 
         if (
           joinedConversationRef.current &&
@@ -137,11 +154,12 @@ export default function MessagesPage() {
           });
         }
 
+        joinedConversationRef.current = nextConversationId;
+
         if (nextConversationId && socket.connected) {
           socket.emit('join_conversation', {
             conversationId: nextConversationId,
           });
-          joinedConversationRef.current = nextConversationId;
         }
       } catch (err) {
         console.error('Failed to load messages:', err);
@@ -169,13 +187,15 @@ export default function MessagesPage() {
     const safeText = typeof text === 'string' ? text.trim() : '';
 
     if (!safeText || sendingMessage) {
-  return false;
-}
+      return false;
+    }
 
-if (!activeConversation?.user?._id) {
-  setError('This conversation is broken. Please refresh or reconnect with this user.');
-  return false;
-}
+    if (!activeConversation?.user?._id) {
+      setError(
+        'This conversation is broken. Please refresh or reconnect with this user.'
+      );
+      return false;
+    }
 
     setError('');
     setSendingMessage(true);

@@ -52,15 +52,15 @@ router.put(
       .optional({ values: 'falsy' })
       .isURL({ protocols: ['http', 'https'], require_protocol: true }),
 
-    body('instagram')
+    body('links.instagram')
       .optional({ values: 'falsy' })
       .isURL({ protocols: ['http', 'https'], require_protocol: true }),
 
-    body('linkedin')
+    body('links.linkedin')
       .optional({ values: 'falsy' })
       .isURL({ protocols: ['http', 'https'], require_protocol: true }),
 
-    body('portfolio')
+    body('links.portfolio')
       .optional({ values: 'falsy' })
       .isURL({ protocols: ['http', 'https'], require_protocol: true }),
 

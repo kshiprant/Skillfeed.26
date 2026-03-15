@@ -135,6 +135,11 @@ export const getIdeaComments = async (req, res) => {
 export const toggleLike = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user?._id || req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Invalid idea ID' });
@@ -146,16 +151,18 @@ export const toggleLike = async (req, res) => {
       return res.status(404).json({ message: 'Idea not found' });
     }
 
-    const existing = idea.likes.find(
-      (likeUserId) => String(likeUserId) === String(req.user._id)
+    const likes = Array.isArray(idea.likes) ? idea.likes : [];
+
+    const existing = likes.find(
+      (likeUserId) => String(likeUserId) === String(userId)
     );
 
     if (existing) {
-      idea.likes = idea.likes.filter(
-        (likeUserId) => String(likeUserId) !== String(req.user._id)
+      idea.likes = likes.filter(
+        (likeUserId) => String(likeUserId) !== String(userId)
       );
     } else {
-      idea.likes.push(req.user._id);
+      idea.likes = [...likes, userId];
     }
 
     idea.score = calculateIdeaScore(idea);
@@ -167,8 +174,11 @@ export const toggleLike = async (req, res) => {
       score: idea.score,
     });
   } catch (error) {
-    console.error('toggleLike error:', error.message);
-    return res.status(500).json({ message: 'Failed to update like' });
+    console.error('toggleLike error:', error);
+    return res.status(500).json({
+      message: 'Failed to update like',
+      error: error.message,
+    });
   }
 };
 

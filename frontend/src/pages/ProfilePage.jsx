@@ -61,9 +61,7 @@ export default function ProfilePage() {
           }
         }
 
-        if (mounted) {
-          setProfile(data);
-        }
+        if (mounted) setProfile(data);
       } catch (err) {
         console.error('Failed to load profile:', err);
         if (mounted) {
@@ -71,9 +69,7 @@ export default function ProfilePage() {
           setProfile(null);
         }
       } finally {
-        if (mounted) {
-          setLoadingProfile(false);
-        }
+        if (mounted) setLoadingProfile(false);
       }
     };
 
@@ -105,7 +101,9 @@ export default function ProfilePage() {
   const activeProfile = isOwnProfile ? user : profile;
 
   const skillsList = useMemo(() => {
-    return (activeProfile?.skills || []).filter(Boolean);
+    return Array.isArray(activeProfile?.skills)
+      ? activeProfile.skills.filter(Boolean)
+      : [];
   }, [activeProfile]);
 
   const profileLinks = useMemo(() => {
@@ -124,6 +122,17 @@ export default function ProfilePage() {
       .join('')
       .slice(0, 2)
       .toUpperCase();
+  }, [activeProfile]);
+
+  const metaItems = useMemo(() => {
+    const items = [];
+    if (activeProfile?.role && activeProfile.role.toLowerCase() !== 'member') {
+      items.push(activeProfile.role);
+    }
+    if (activeProfile?.city) {
+      items.push(activeProfile.city);
+    }
+    return items;
   }, [activeProfile]);
 
   const save = async (e) => {
@@ -171,21 +180,10 @@ export default function ProfilePage() {
         links: {},
       };
 
-      if (trimmedAvatarUrl) {
-        payload.avatarUrl = trimmedAvatarUrl;
-      }
-
-      if (trimmedInstagram) {
-        payload.links.instagram = trimmedInstagram;
-      }
-
-      if (trimmedLinkedin) {
-        payload.links.linkedin = trimmedLinkedin;
-      }
-
-      if (trimmedPortfolio) {
-        payload.links.portfolio = trimmedPortfolio;
-      }
+      if (trimmedAvatarUrl) payload.avatarUrl = trimmedAvatarUrl;
+      if (trimmedInstagram) payload.links.instagram = trimmedInstagram;
+      if (trimmedLinkedin) payload.links.linkedin = trimmedLinkedin;
+      if (trimmedPortfolio) payload.links.portfolio = trimmedPortfolio;
 
       const { data } = await api.put('/users/me', payload);
 
@@ -233,10 +231,12 @@ export default function ProfilePage() {
         title={isOwnProfile ? 'Your profile' : 'Profile'}
         subtitle={isOwnProfile ? 'Build a profile people would want to connect with.' : 'Viewing member profile.'}
       >
-        <section className="card empty-state">
-          <div className="empty-state-block">
-            <h3>Loading profile...</h3>
-            <p>Please wait a moment.</p>
+        <section className="profile-page-v2">
+          <div className="card empty-state">
+            <div className="empty-state-block">
+              <h3>Loading profile...</h3>
+              <p>Please wait a moment.</p>
+            </div>
           </div>
         </section>
       </Layout>
@@ -246,10 +246,12 @@ export default function ProfilePage() {
   if (!activeProfile) {
     return (
       <Layout title="Profile" subtitle="Viewing member profile.">
-        <section className="card empty-state">
-          <div className="empty-state-block">
-            <h3>Profile unavailable</h3>
-            <p>{error || 'This profile could not be loaded.'}</p>
+        <section className="profile-page-v2">
+          <div className="card empty-state">
+            <div className="empty-state-block">
+              <h3>Profile unavailable</h3>
+              <p>{error || 'This profile could not be loaded.'}</p>
+            </div>
           </div>
         </section>
       </Layout>
@@ -265,185 +267,254 @@ export default function ProfilePage() {
           : 'Viewing member profile.'
       }
     >
-      <section className="profile-page">
-        <div className="card profile-card">
-          <div className="profile-hero">
-            <div className="profile-avatar-wrap">
+      <section className="profile-page-v2">
+        <section className="profile-hero-v2">
+          <div className="profile-hero-top">
+            <div className="profile-avatar-shell">
               {activeProfile.avatarUrl ? (
                 <img
                   src={activeProfile.avatarUrl}
                   alt={activeProfile.name || 'Profile'}
-                  className="profile-avatar"
+                  className="profile-avatar-v2"
                 />
               ) : (
-                <div className="profile-avatar profile-avatar-fallback">{initials}</div>
+                <div className="profile-avatar-v2 profile-avatar-fallback-v2">
+                  {initials}
+                </div>
               )}
             </div>
 
-            <div className="profile-main">
-              <div className="profile-main-top">
-                <div className="profile-identity">
-                  <h2>{activeProfile.name || 'Profile'}</h2>
-                  <p className="profile-headline">
-                    {activeProfile.headline || 'Member'}
-                  </p>
+            <div className="profile-identity-v2">
+              <h2>{activeProfile.name || 'Profile'}</h2>
+              <p className="profile-headline-v2">
+                {activeProfile.headline || 'No headline added yet'}
+              </p>
 
-                  {(activeProfile.role || activeProfile.city) && (
-                    <div className="profile-meta">
-                      {activeProfile.role ? <span>{activeProfile.role}</span> : null}
-                      {activeProfile.city ? <span>{activeProfile.city}</span> : null}
-                    </div>
-                  )}
-                </div>
-
-                {isOwnProfile ? (
-                  <div className="profile-actions">
-                    <button
-                      type="button"
-                      className="ghost-btn"
-                      onClick={() => setEditing((prev) => !prev)}
-                    >
-                      {editing ? 'Cancel editing' : 'Edit profile'}
-                    </button>
-
-                    <button
-                      type="button"
-                      className="ghost-btn danger-btn subtle-danger-btn"
-                      onClick={logout}
-                    >
-                      Logout
-                    </button>
-
-                    <button
-                      type="button"
-                      className="ghost-btn danger-btn"
-                      onClick={handleDeleteAccount}
-                      disabled={deletingAccount}
-                    >
-                      {deletingAccount ? 'Deleting account...' : 'Delete account'}
-                    </button>
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="profile-section">
-                <p className="profile-bio">
-                  {activeProfile.bio || 'No bio added yet.'}
-                </p>
-              </div>
-
-              {skillsList.length > 0 ? (
-                <div className="profile-section">
-                  <div className="profile-section-label">Skills</div>
-                  <div className="profile-skills">
-                    {skillsList.map((skill, index) => (
-                      <span className="skill-chip" key={`${skill}-${index}`}>
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-
-              {profileLinks.length > 0 ? (
-                <div className="profile-section">
-                  <div className="profile-section-label">Links</div>
-                  <div className="profile-links">
-                    {profileLinks.map((link) => (
-                      <a
-                        key={link.label}
-                        href={link.value}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="profile-link"
-                      >
-                        {link.label}
-                      </a>
-                    ))}
-                  </div>
+              {metaItems.length > 0 ? (
+                <div className="profile-meta-v2">
+                  {metaItems.map((item, index) => (
+                    <span key={`${item}-${index}`} className="profile-meta-pill">
+                      {item}
+                    </span>
+                  ))}
                 </div>
               ) : null}
             </div>
           </div>
-        </div>
+
+          {isOwnProfile ? (
+            <div className="profile-primary-actions">
+              <button
+                type="button"
+                className="primary-btn profile-edit-btn"
+                onClick={() => setEditing((prev) => !prev)}
+              >
+                {editing ? 'Close editor' : 'Edit profile'}
+              </button>
+            </div>
+          ) : null}
+        </section>
 
         {saved ? <div className="success-box">{saved}</div> : null}
         {error ? <div className="error-box">{error}</div> : null}
 
-        {isOwnProfile && editing ? (
-          <form className="card stack-form profile-edit-form" onSubmit={save}>
-            <div className="profile-form-head">
-              <h3>Edit profile</h3>
-              <p className="section-sub">Update how people see you on Skillfeed.</p>
+        <section className="profile-grid-v2">
+          <div className="card profile-section-card-v2">
+            <div className="profile-section-head-v2">
+              <h3>About</h3>
+            </div>
+            <p className="profile-bio-v2">
+              {activeProfile.bio || 'No bio added yet.'}
+            </p>
+          </div>
+
+          <div className="card profile-section-card-v2">
+            <div className="profile-section-head-v2">
+              <h3>Skills</h3>
             </div>
 
-            <input
-              placeholder="Name"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
+            {skillsList.length > 0 ? (
+              <div className="profile-skills-v2">
+                {skillsList.map((skill, index) => (
+                  <span className="skill-chip-v2" key={`${skill}-${index}`}>
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="profile-empty-copy">No skills added yet.</p>
+            )}
+          </div>
 
-            <input
-              placeholder="Headline"
-              value={form.headline}
-              onChange={(e) => setForm({ ...form, headline: e.target.value })}
-            />
+          <div className="card profile-section-card-v2">
+            <div className="profile-section-head-v2">
+              <h3>Links</h3>
+            </div>
 
-            <input
-              placeholder="Role"
-              value={form.role}
-              onChange={(e) => setForm({ ...form, role: e.target.value })}
-            />
+            {profileLinks.length > 0 ? (
+              <div className="profile-links-v2">
+                {profileLinks.map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.value}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="profile-link-pill-v2"
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <p className="profile-empty-copy">No links added yet.</p>
+            )}
+          </div>
 
-            <input
-              placeholder="City"
-              value={form.city}
-              onChange={(e) => setForm({ ...form, city: e.target.value })}
-            />
+          {isOwnProfile && editing ? (
+            <form className="card profile-editor-card-v2" onSubmit={save}>
+              <div className="profile-section-head-v2">
+                <h3>Edit profile</h3>
+                <p>Refine your public identity on Skillfeed.</p>
+              </div>
 
-            <input
-              placeholder="Avatar URL"
-              value={form.avatarUrl}
-              onChange={(e) => setForm({ ...form, avatarUrl: e.target.value })}
-            />
+              <div className="profile-form-grid-v2">
+                <div className="profile-input-group-v2">
+                  <label>Name</label>
+                  <input
+                    placeholder="Your name"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  />
+                </div>
 
-            <textarea
-              rows="4"
-              placeholder="Bio"
-              value={form.bio}
-              onChange={(e) => setForm({ ...form, bio: e.target.value })}
-            />
+                <div className="profile-input-group-v2">
+                  <label>Headline</label>
+                  <input
+                    placeholder="What do you do?"
+                    value={form.headline}
+                    onChange={(e) => setForm({ ...form, headline: e.target.value })}
+                  />
+                </div>
 
-            <input
-              placeholder="Skills, comma separated"
-              value={form.skills}
-              onChange={(e) => setForm({ ...form, skills: e.target.value })}
-            />
+                <div className="profile-input-group-v2">
+                  <label>Role</label>
+                  <input
+                    placeholder="Founder, Designer, Developer..."
+                    value={form.role}
+                    onChange={(e) => setForm({ ...form, role: e.target.value })}
+                  />
+                </div>
 
-            <input
-              placeholder="Instagram link"
-              value={form.instagram}
-              onChange={(e) => setForm({ ...form, instagram: e.target.value })}
-            />
+                <div className="profile-input-group-v2">
+                  <label>City</label>
+                  <input
+                    placeholder="Your city"
+                    value={form.city}
+                    onChange={(e) => setForm({ ...form, city: e.target.value })}
+                  />
+                </div>
 
-            <input
-              placeholder="LinkedIn link"
-              value={form.linkedin}
-              onChange={(e) => setForm({ ...form, linkedin: e.target.value })}
-            />
+                <div className="profile-input-group-v2 profile-input-full-v2">
+                  <label>Avatar URL</label>
+                  <input
+                    placeholder="https://..."
+                    value={form.avatarUrl}
+                    onChange={(e) => setForm({ ...form, avatarUrl: e.target.value })}
+                  />
+                </div>
 
-            <input
-              placeholder="Portfolio link"
-              value={form.portfolio}
-              onChange={(e) => setForm({ ...form, portfolio: e.target.value })}
-            />
+                <div className="profile-input-group-v2 profile-input-full-v2">
+                  <label>Bio</label>
+                  <textarea
+                    rows="5"
+                    placeholder="Tell people what you build, what you’re good at, and what kind of collaborators you want."
+                    value={form.bio}
+                    onChange={(e) => setForm({ ...form, bio: e.target.value })}
+                  />
+                </div>
 
-            <button className="primary-btn" type="submit" disabled={saving}>
-              {saving ? 'Saving...' : 'Save profile'}
-            </button>
-          </form>
-        ) : null}
+                <div className="profile-input-group-v2 profile-input-full-v2">
+                  <label>Skills</label>
+                  <input
+                    placeholder="React, Node.js, UI Design, Digital Forensics"
+                    value={form.skills}
+                    onChange={(e) => setForm({ ...form, skills: e.target.value })}
+                  />
+                </div>
+
+                <div className="profile-input-group-v2">
+                  <label>Instagram</label>
+                  <input
+                    placeholder="https://instagram.com/..."
+                    value={form.instagram}
+                    onChange={(e) => setForm({ ...form, instagram: e.target.value })}
+                  />
+                </div>
+
+                <div className="profile-input-group-v2">
+                  <label>LinkedIn</label>
+                  <input
+                    placeholder="https://linkedin.com/in/..."
+                    value={form.linkedin}
+                    onChange={(e) => setForm({ ...form, linkedin: e.target.value })}
+                  />
+                </div>
+
+                <div className="profile-input-group-v2 profile-input-full-v2">
+                  <label>Portfolio</label>
+                  <input
+                    placeholder="https://yourportfolio.com"
+                    value={form.portfolio}
+                    onChange={(e) => setForm({ ...form, portfolio: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="profile-editor-actions-v2">
+                <button
+                  type="button"
+                  className="ghost-btn"
+                  onClick={() => setEditing(false)}
+                >
+                  Cancel
+                </button>
+
+                <button className="primary-btn" type="submit" disabled={saving}>
+                  {saving ? 'Saving...' : 'Save profile'}
+                </button>
+              </div>
+            </form>
+          ) : null}
+
+          {isOwnProfile ? (
+            <div className="card danger-zone-v2">
+              <div className="profile-section-head-v2">
+                <h3>Account</h3>
+                <p>Manage your session and account access.</p>
+              </div>
+
+              <div className="danger-actions-v2">
+                <button
+                  type="button"
+                  className="ghost-btn danger-soft-btn-v2"
+                  onClick={logout}
+                >
+                  Logout
+                </button>
+
+                <button
+                  type="button"
+                  className="ghost-btn danger-btn"
+                  onClick={handleDeleteAccount}
+                  disabled={deletingAccount}
+                >
+                  {deletingAccount ? 'Deleting account...' : 'Delete account'}
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </section>
       </section>
     </Layout>
   );
-}
+      }

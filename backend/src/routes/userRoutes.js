@@ -13,7 +13,15 @@ const router = express.Router();
 
 router.use(protect);
 
+/* =========================
+   Get My Profile
+========================= */
+
 router.get('/me', getMyProfile);
+
+/* =========================
+   Update Profile
+========================= */
 
 router.put(
   '/me',
@@ -71,9 +79,21 @@ router.put(
   updateProfile
 );
 
+/* =========================
+   Delete Account
+========================= */
+
 router.delete('/me', deleteMyAccount);
 
+/* =========================
+   Discover Users
+========================= */
+
 router.get('/discover', discoverUsers);
+
+/* =========================
+   Get User By ID
+========================= */
 
 router.get(
   '/:id',

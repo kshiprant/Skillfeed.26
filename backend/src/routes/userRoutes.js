@@ -18,16 +18,55 @@ router.get('/me', getMyProfile);
 router.put(
   '/me',
   [
-    body('name').optional().isString().trim().isLength({ min: 2, max: 60 }),
-    body('headline').optional().isString().trim().isLength({ max: 120 }),
-    body('bio').optional().isString().trim().isLength({ max: 500 }),
-    body('city').optional().isString().trim().isLength({ max: 80 }),
-    body('role').optional().isString().trim().isLength({ max: 60 }),
-    body('avatarUrl').optional().isURL({ protocols: ['http', 'https'], require_protocol: true }),
-    body('instagram').optional().isURL({ protocols: ['http', 'https'], require_protocol: true }),
-    body('linkedin').optional().isURL({ protocols: ['http', 'https'], require_protocol: true }),
-    body('portfolio').optional().isURL({ protocols: ['http', 'https'], require_protocol: true }),
-    body('skills').optional().isArray({ max: 30 }),
+    body('name')
+      .optional()
+      .isString()
+      .trim()
+      .isLength({ min: 2, max: 60 }),
+
+    body('headline')
+      .optional()
+      .isString()
+      .trim()
+      .isLength({ max: 120 }),
+
+    body('bio')
+      .optional()
+      .isString()
+      .trim()
+      .isLength({ max: 500 }),
+
+    body('city')
+      .optional()
+      .isString()
+      .trim()
+      .isLength({ max: 80 }),
+
+    body('role')
+      .optional()
+      .isString()
+      .trim()
+      .isLength({ max: 60 }),
+
+    body('avatarUrl')
+      .optional({ values: 'falsy' })
+      .isURL({ protocols: ['http', 'https'], require_protocol: true }),
+
+    body('instagram')
+      .optional({ values: 'falsy' })
+      .isURL({ protocols: ['http', 'https'], require_protocol: true }),
+
+    body('linkedin')
+      .optional({ values: 'falsy' })
+      .isURL({ protocols: ['http', 'https'], require_protocol: true }),
+
+    body('portfolio')
+      .optional({ values: 'falsy' })
+      .isURL({ protocols: ['http', 'https'], require_protocol: true }),
+
+    body('skills')
+      .optional()
+      .isArray({ max: 30 }),
   ],
   updateProfile
 );

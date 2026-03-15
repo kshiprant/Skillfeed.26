@@ -22,6 +22,7 @@ const normalizeStringArray = (value, maxItems = 15, maxLength = 40) => {
 export const createIdea = async (req, res) => {
   try {
     const errors = validationResult(req);
+
     if (!errors.isEmpty()) {
       return res.status(400).json({
         message: 'Invalid input',
@@ -37,10 +38,13 @@ export const createIdea = async (req, res) => {
     const safeTitle = typeof title === 'string' ? title.trim() : '';
     const safeDescription =
       typeof description === 'string' ? description.trim() : '';
-    const safeStage = typeof stage === 'string' ? stage.trim().slice(0, 40) : '';
+    const safeStage =
+      typeof stage === 'string' ? stage.trim().slice(0, 40) : '';
 
     if (!safeTitle || !safeDescription) {
-      return res.status(400).json({ message: 'Title and description required' });
+      return res.status(400).json({
+        message: 'Title and description required',
+      });
     }
 
     const idea = await Idea.create({
@@ -63,7 +67,7 @@ export const createIdea = async (req, res) => {
 
     return res.status(201).json(populated);
   } catch (error) {
-    console.error('createIdea error:', error.message);
+    console.error('createIdea error:', error);
     return res.status(500).json({ message: 'Failed to create idea' });
   }
 };
@@ -78,7 +82,7 @@ export const getIdeas = async (req, res) => {
 
     return res.json(ideas);
   } catch (error) {
-    console.error('getIdeas error:', error.message);
+    console.error('getIdeas error:', error);
     return res.status(500).json({ message: 'Failed to load ideas' });
   }
 };
@@ -127,7 +131,7 @@ export const getIdeaComments = async (req, res) => {
       hasMore: start + limit < total,
     });
   } catch (error) {
-    console.error('getIdeaComments error:', error.message);
+    console.error('getIdeaComments error:', error);
     return res.status(500).json({ message: 'Failed to load comments' });
   }
 };
@@ -145,7 +149,9 @@ export const toggleLike = async (req, res) => {
       return res.status(400).json({ message: 'Invalid idea ID' });
     }
 
-    const idea = await Idea.findById(id);
+    const idea = await Idea.findById(id).select(
+      'likes comments joinRequestsCount'
+    );
 
     if (!idea) {
       return res.status(404).json({ message: 'Idea not found' });
@@ -153,25 +159,42 @@ export const toggleLike = async (req, res) => {
 
     const likes = Array.isArray(idea.likes) ? idea.likes : [];
 
-    const existing = likes.find(
+    const alreadyLiked = likes.some(
       (likeUserId) => String(likeUserId) === String(userId)
     );
 
-    if (existing) {
-      idea.likes = likes.filter(
-        (likeUserId) => String(likeUserId) !== String(userId)
+    let updatedIdea;
+
+    if (alreadyLiked) {
+      updatedIdea = await Idea.findByIdAndUpdate(
+        id,
+        { $pull: { likes: userId } },
+        {
+          new: true,
+          runValidators: false,
+          projection: 'likes comments joinRequestsCount',
+        }
       );
     } else {
-      idea.likes = [...likes, userId];
+      updatedIdea = await Idea.findByIdAndUpdate(
+        id,
+        { $addToSet: { likes: userId } },
+        {
+          new: true,
+          runValidators: false,
+          projection: 'likes comments joinRequestsCount',
+        }
+      );
     }
 
-    idea.score = calculateIdeaScore(idea);
-    await idea.save();
+    const score = calculateIdeaScore(updatedIdea);
+
+    await Idea.updateOne({ _id: id }, { $set: { score } });
 
     return res.json({
-      likes: idea.likes.length,
-      liked: !existing,
-      score: idea.score,
+      likes: updatedIdea.likes.length,
+      liked: !alreadyLiked,
+      score,
     });
   } catch (error) {
     console.error('toggleLike error:', error);
@@ -185,6 +208,7 @@ export const toggleLike = async (req, res) => {
 export const addComment = async (req, res) => {
   try {
     const errors = validationResult(req);
+
     if (!errors.isEmpty()) {
       return res.status(400).json({
         message: 'Invalid input',
@@ -197,6 +221,11 @@ export const addComment = async (req, res) => {
 
     const { id } = req.params;
     const { text } = req.body;
+    const userId = req.user?._id || req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Invalid idea ID' });
@@ -208,25 +237,39 @@ export const addComment = async (req, res) => {
       return res.status(400).json({ message: 'Comment required' });
     }
 
-    const idea = await Idea.findById(id);
+    const idea = await Idea.findById(id).select(
+      '_id likes comments joinRequestsCount'
+    );
 
     if (!idea) {
       return res.status(404).json({ message: 'Idea not found' });
     }
 
-    idea.comments.push({
-      user: req.user._id,
+    const commentDoc = {
+      user: userId,
       comment: safeText,
-    });
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
 
-    idea.score = calculateIdeaScore(idea);
-    await idea.save();
+    await Idea.updateOne(
+      { _id: id },
+      { $push: { comments: commentDoc } },
+      { runValidators: false }
+    );
 
-    const updatedIdea = await Idea.findById(id)
+    const refreshedIdea = await Idea.findById(id)
       .populate('comments.user', 'name avatarUrl')
-      .select('comments');
+      .select('comments likes joinRequestsCount');
 
-    const comments = Array.isArray(updatedIdea.comments) ? updatedIdea.comments : [];
+    const score = calculateIdeaScore(refreshedIdea);
+
+    await Idea.updateOne({ _id: id }, { $set: { score } });
+
+    const comments = Array.isArray(refreshedIdea.comments)
+      ? refreshedIdea.comments
+      : [];
+
     const latestComments = comments.slice(-2);
     const newComment = comments[comments.length - 1];
 
@@ -234,10 +277,14 @@ export const addComment = async (req, res) => {
       comment: newComment,
       commentsCount: comments.length,
       latestComments,
+      score,
     });
   } catch (error) {
-    console.error('addComment error:', error.message);
-    return res.status(500).json({ message: 'Failed to add comment' });
+    console.error('addComment error:', error);
+    return res.status(500).json({
+      message: 'Failed to add comment',
+      error: error.message,
+    });
   }
 };
 
@@ -256,14 +303,16 @@ export const deleteIdea = async (req, res) => {
     }
 
     if (String(idea.user) !== String(req.user._id)) {
-      return res.status(403).json({ message: 'Not authorized to delete this idea' });
+      return res
+        .status(403)
+        .json({ message: 'Not authorized to delete this idea' });
     }
 
     await idea.deleteOne();
 
     return res.json({ message: 'Idea deleted successfully', id });
   } catch (error) {
-    console.error('deleteIdea error:', error.message);
+    console.error('deleteIdea error:', error);
     return res.status(500).json({ message: 'Failed to delete idea' });
   }
 };

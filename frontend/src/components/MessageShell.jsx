@@ -57,7 +57,9 @@ export default function MessageShell({
           </div>
         ) : (
           <div className="conversation-list">
-            {conversations.map((convo) => {
+           {conversations
+  .filter((convo) => convo?.user?._id)
+  .map((convo) => {
               const isActive = activeConversation?._id === convo._id;
               const userName = convo.user?.name || 'Unknown user';
               const headline = convo.user?.headline || 'Skillfeed member';

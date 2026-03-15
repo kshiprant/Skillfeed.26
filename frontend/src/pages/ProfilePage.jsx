@@ -96,9 +96,9 @@ export default function ProfilePage() {
       city: source.city || '',
       avatarUrl: source.avatarUrl || '',
       role: source.role || '',
-      instagram: source.instagram || source.links?.instagram || '',
-      linkedin: source.linkedin || source.links?.linkedin || '',
-      portfolio: source.portfolio || source.links?.portfolio || '',
+      instagram: source.links?.instagram || '',
+      linkedin: source.links?.linkedin || '',
+      portfolio: source.links?.portfolio || '',
     });
   }, [user, profile, isOwnProfile]);
 
@@ -110,9 +110,9 @@ export default function ProfilePage() {
 
   const profileLinks = useMemo(() => {
     return [
-      { label: 'Instagram', value: activeProfile?.instagram || activeProfile?.links?.instagram },
-      { label: 'LinkedIn', value: activeProfile?.linkedin || activeProfile?.links?.linkedin },
-      { label: 'Portfolio', value: activeProfile?.portfolio || activeProfile?.links?.portfolio },
+      { label: 'Instagram', value: activeProfile?.links?.instagram },
+      { label: 'LinkedIn', value: activeProfile?.links?.linkedin },
+      { label: 'Portfolio', value: activeProfile?.links?.portfolio },
     ].filter((item) => item.value);
   }, [activeProfile]);
 
@@ -168,12 +168,24 @@ export default function ProfilePage() {
           .split(',')
           .map((s) => s.trim())
           .filter(Boolean),
+        links: {},
       };
 
-      if (trimmedAvatarUrl) payload.avatarUrl = trimmedAvatarUrl;
-      if (trimmedInstagram) payload.instagram = trimmedInstagram;
-      if (trimmedLinkedin) payload.linkedin = trimmedLinkedin;
-      if (trimmedPortfolio) payload.portfolio = trimmedPortfolio;
+      if (trimmedAvatarUrl) {
+        payload.avatarUrl = trimmedAvatarUrl;
+      }
+
+      if (trimmedInstagram) {
+        payload.links.instagram = trimmedInstagram;
+      }
+
+      if (trimmedLinkedin) {
+        payload.links.linkedin = trimmedLinkedin;
+      }
+
+      if (trimmedPortfolio) {
+        payload.links.portfolio = trimmedPortfolio;
+      }
 
       const { data } = await api.put('/users/me', payload);
 
@@ -434,4 +446,4 @@ export default function ProfilePage() {
       </section>
     </Layout>
   );
-            }
+}

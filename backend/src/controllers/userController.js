@@ -25,7 +25,6 @@ const escapeRegex = (value) =>
 
 export const updateProfile = async (req, res) => {
   try {
-
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -38,7 +37,6 @@ export const updateProfile = async (req, res) => {
       });
     }
 
-    // 🔥 FIX: get real mongoose document
     const user = await User.findById(req.user._id);
 
     if (!user) {
@@ -57,15 +55,12 @@ export const updateProfile = async (req, res) => {
     ];
 
     for (const key of allowed) {
-
       if (req.body[key] === undefined) continue;
 
       if (key === 'skills') {
         user.skills = Array.isArray(req.body.skills)
           ? req.body.skills
-              .map((item) =>
-                typeof item === 'string' ? item.trim() : ''
-              )
+              .map((item) => (typeof item === 'string' ? item.trim() : ''))
               .filter(Boolean)
               .slice(0, 30)
           : [];
@@ -73,22 +68,15 @@ export const updateProfile = async (req, res) => {
       }
 
       if (key === 'links') {
-
         const links = req.body.links || {};
 
         user.links = {
           instagram:
-            typeof links.instagram === 'string'
-              ? links.instagram.trim()
-              : '',
+            typeof links.instagram === 'string' ? links.instagram.trim() : '',
           linkedin:
-            typeof links.linkedin === 'string'
-              ? links.linkedin.trim()
-              : '',
+            typeof links.linkedin === 'string' ? links.linkedin.trim() : '',
           portfolio:
-            typeof links.portfolio === 'string'
-              ? links.portfolio.trim()
-              : '',
+            typeof links.portfolio === 'string' ? links.portfolio.trim() : '',
         };
 
         continue;
@@ -105,9 +93,7 @@ export const updateProfile = async (req, res) => {
     });
 
     return res.json(sanitizeUser(updated));
-
   } catch (error) {
-
     console.error('updateProfile error:', error);
 
     return res.status(500).json({
@@ -119,7 +105,6 @@ export const updateProfile = async (req, res) => {
 
 export const getMyProfile = async (req, res) => {
   try {
-
     const user = await User.findById(req.user._id).select(
       '_id name email headline bio skills city avatarUrl role links openToCollaborate createdAt updatedAt'
     );
@@ -134,9 +119,7 @@ export const getMyProfile = async (req, res) => {
       ...sanitizeUser(user),
       email: user.email,
     });
-
   } catch (error) {
-
     console.error('getMyProfile error:', error.message);
 
     return res.status(500).json({
@@ -147,7 +130,6 @@ export const getMyProfile = async (req, res) => {
 
 export const getUserById = async (req, res) => {
   try {
-
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -167,9 +149,7 @@ export const getUserById = async (req, res) => {
     }
 
     return res.json(sanitizeUser(user));
-
   } catch (error) {
-
     console.error('getUserById error:', error.message);
 
     return res.status(500).json({
@@ -180,11 +160,8 @@ export const getUserById = async (req, res) => {
 
 export const discoverUsers = async (req, res) => {
   try {
-
     const rawQuery =
-      typeof req.query.q === 'string'
-        ? req.query.q.trim()
-        : '';
+      typeof req.query.q === 'string' ? req.query.q.trim() : '';
 
     const q = rawQuery.slice(0, 50);
 
@@ -195,11 +172,7 @@ export const discoverUsers = async (req, res) => {
     let filter = baseFilter;
 
     if (q) {
-
-      const safeRegex = new RegExp(
-        escapeRegex(q),
-        'i'
-      );
+      const safeRegex = new RegExp(escapeRegex(q), 'i');
 
       filter = {
         ...baseFilter,
@@ -222,21 +195,18 @@ export const discoverUsers = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(50);
 
-    const relationRows =
-      await ConnectionRequest.find({
-        $or: [
-          { fromUser: req.user._id },
-          { toUser: req.user._id },
-        ],
-      }).select('fromUser toUser status');
+    const relationRows = await ConnectionRequest.find({
+      $or: [
+        { fromUser: req.user._id },
+        { toUser: req.user._id },
+      ],
+    }).select('fromUser toUser status');
 
     const relationMap = new Map();
 
     relationRows.forEach((row) => {
-
       const other =
-        String(row.fromUser) ===
-        String(req.user._id)
+        String(row.fromUser) === String(req.user._id)
           ? String(row.toUser)
           : String(row.fromUser);
 
@@ -246,19 +216,12 @@ export const discoverUsers = async (req, res) => {
     return res.json(
       users.map((user) =>
         sanitizeUser(user, {
-          relationStatus:
-            relationMap.get(String(user._id)) ||
-            'none',
+          relationStatus: relationMap.get(String(user._id)) || 'none',
         })
       )
     );
-
   } catch (error) {
-
-    console.error(
-      'discoverUsers error:',
-      error.message
-    );
+    console.error('discoverUsers error:', error.message);
 
     return res.status(500).json({
       message: 'Failed to discover users',
@@ -268,7 +231,6 @@ export const discoverUsers = async (req, res) => {
 
 export const deleteMyAccount = async (req, res) => {
   try {
-
     const userId = req.user._id;
 
     await Idea.deleteMany({ user: userId });
@@ -295,13 +257,8 @@ export const deleteMyAccount = async (req, res) => {
     return res.json({
       message: 'Account deleted successfully',
     });
-
   } catch (error) {
-
-    console.error(
-      'deleteMyAccount error:',
-      error.message
-    );
+    console.error('deleteMyAccount error:', error.message);
 
     return res.status(500).json({
       message: 'Failed to delete account',

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import Layout from '../components/Layout';
 import PersonCard from '../components/PersonCard';
 import api from '../api/client';
 
@@ -22,9 +21,7 @@ export default function FindPeoplePage() {
       ]);
 
       setPeople(Array.isArray(users) ? users : []);
-      setBox(
-        connections || { incoming: [], sent: [], connections: [] }
-      );
+      setBox(connections || { incoming: [], sent: [], connections: [] });
     } catch (err) {
       console.error('Failed to load people page:', err);
       setError(err.response?.data?.message || 'Failed to load people.');
@@ -102,50 +99,77 @@ export default function FindPeoplePage() {
   };
 
   return (
-    <Layout title="Find people" subtitle="Search by skill, role, or headline.">
+    <div className="page-stack">
+      <section className="hero-card hero-card--people">
+        <div className="hero-copy">
+          <span className="hero-eyebrow">Network</span>
+          <h2>Find people by skill, role, or headline</h2>
+          <p>
+            Search collaborators, review incoming requests, and grow your
+            network on Skillfeed.
+          </p>
+        </div>
+      </section>
+
       <section className="card stack-form">
-        <input
-          placeholder="Search people or skills"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        <button className="primary-btn" onClick={() => load(query)} disabled={loading}>
-          {loading ? 'Loading...' : 'Search'}
-        </button>
+        <div className="search-row">
+          <input
+            placeholder="Search people or skills"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <button
+            className="primary-btn"
+            onClick={() => load(query)}
+            disabled={loading}
+          >
+            {loading ? 'Loading...' : 'Search'}
+          </button>
+        </div>
+
         {error ? <div className="error-box">{error}</div> : null}
       </section>
 
       <section className="card">
-        <h3>Incoming requests</h3>
+        <div className="section-head">
+          <div>
+            <h3>Incoming requests</h3>
+            <p className="section-sub">People who want to connect with you.</p>
+          </div>
+        </div>
 
         {box.incoming.length === 0 ? (
           <p className="muted">No incoming requests.</p>
         ) : (
-          box.incoming.map((item) => (
-            <div key={item._id} className="request-row">
-              <div>
-                <strong>{item.fromUser.name}</strong>
-                <p className="muted">{item.fromUser.headline || 'No headline added yet'}</p>
-              </div>
+          <div className="request-list">
+            {box.incoming.map((item) => (
+              <div key={item._id} className="request-row">
+                <div>
+                  <strong>{item.fromUser.name}</strong>
+                  <p className="muted">
+                    {item.fromUser.headline || 'No headline added yet'}
+                  </p>
+                </div>
 
-              <div className="row-actions">
-                <button
-                  className="primary-btn"
-                  onClick={() => act(item._id, 'accepted')}
-                  disabled={actionLoading === String(item._id)}
-                >
-                  Accept
-                </button>
-                <button
-                  className="ghost-btn"
-                  onClick={() => act(item._id, 'rejected')}
-                  disabled={actionLoading === String(item._id)}
-                >
-                  Reject
-                </button>
+                <div className="row-actions">
+                  <button
+                    className="primary-btn"
+                    onClick={() => act(item._id, 'accepted')}
+                    disabled={actionLoading === String(item._id)}
+                  >
+                    Accept
+                  </button>
+                  <button
+                    className="ghost-btn"
+                    onClick={() => act(item._id, 'rejected')}
+                    disabled={actionLoading === String(item._id)}
+                  >
+                    Reject
+                  </button>
+                </div>
               </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </section>
 
@@ -168,6 +192,6 @@ export default function FindPeoplePage() {
           ))
         )}
       </section>
-    </Layout>
+    </div>
   );
 }

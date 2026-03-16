@@ -9,6 +9,7 @@ import MessagesPage from './pages/MessagesPage';
 import ProfilePage from './pages/ProfilePage';
 import NotificationsPage from './pages/NotificationsPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import Layout from './components/Layout';
 import { useAuth } from './context/AuthContext';
 
 export default function App() {
@@ -32,13 +33,15 @@ export default function App() {
       />
 
       <Route element={<ProtectedRoute />}>
-        <Route path="/feed" element={<FeedPage />} />
-        <Route path="/ideas" element={<IdeasPage />} />
-        <Route path="/people" element={<FindPeoplePage />} />
-        <Route path="/notifications" element={<NotificationsPage />} />
-        <Route path="/messages" element={<MessagesPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/profile/:userId" element={<ProfilePage />} />
+        <Route element={<Layout />}>
+          <Route path="/feed" element={<FeedPage />} />
+          <Route path="/ideas" element={<IdeasPage />} />
+          <Route path="/people" element={<FindPeoplePage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/messages" element={<MessagesPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile/:userId" element={<ProfilePage />} />
+        </Route>
       </Route>
 
       <Route

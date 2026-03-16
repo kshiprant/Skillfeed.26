@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import Layout from '../components/Layout';
 import StatCard from '../components/StatCard';
 import api from '../api/client';
 
@@ -18,8 +17,12 @@ export default function FeedPage() {
         ]);
 
         const safeIdeas = Array.isArray(ideas) ? ideas : [];
-        const safeIncoming = Array.isArray(connectionData?.incoming) ? connectionData.incoming : [];
-        const safeConnections = Array.isArray(connectionData?.connections) ? connectionData.connections : [];
+        const safeIncoming = Array.isArray(connectionData?.incoming)
+          ? connectionData.incoming
+          : [];
+        const safeConnections = Array.isArray(connectionData?.connections)
+          ? connectionData.connections
+          : [];
 
         setStats({
           ideas: safeIdeas.length,
@@ -44,17 +47,39 @@ export default function FeedPage() {
     idea?.title || idea?.ideaTitle || 'Untitled idea';
 
   const getIdeaText = (idea) =>
-    idea?.summary || idea?.description || idea?.content || 'No description added yet.';
+    idea?.summary ||
+    idea?.description ||
+    idea?.content ||
+    'No description added yet.';
 
   const getAuthorName = (idea) =>
-    idea?.user?.name || idea?.author?.name || idea?.createdBy?.name || 'Anonymous';
+    idea?.user?.name ||
+    idea?.author?.name ||
+    idea?.createdBy?.name ||
+    'Anonymous';
 
   return (
-    <Layout
-      title="Build startups with the right people"
-      subtitle="Discover ideas, connect with collaborators, and start building."
-    >
-      <section className="grid-cards">
+    <div className="page-stack">
+      <section className="hero-card hero-card--feed">
+        <div className="hero-copy">
+          <span className="hero-eyebrow">Dashboard</span>
+          <h2>Build startups with the right people</h2>
+          <p>
+            Discover ideas, connect with collaborators, and start building.
+          </p>
+        </div>
+
+        <div className="hero-actions">
+          <Link to="/ideas" className="primary-btn">
+            Share an idea
+          </Link>
+          <Link to="/people" className="ghost-btn">
+            Find people
+          </Link>
+        </div>
+      </section>
+
+      <section className="grid-cards stats-grid">
         <StatCard
           label="Live ideas"
           value={stats.ideas}
@@ -72,11 +97,13 @@ export default function FeedPage() {
         />
       </section>
 
-      <section className="card hero-card">
+      <section className="card">
         <div className="section-head">
           <div>
             <h2>Recent ideas</h2>
-            <p className="section-sub">See what people are building on Skillfeed.</p>
+            <p className="section-sub">
+              See what people are building on Skillfeed.
+            </p>
           </div>
           <Link to="/ideas" className="ghost-btn">
             View all
@@ -98,16 +125,26 @@ export default function FeedPage() {
             {recentIdeas.map((idea) => (
               <article key={idea._id || idea.id} className="feed-item">
                 <div className="feed-item-top">
-                  <h3>{getIdeaTitle(idea)}</h3>
-                  <span className="feed-author">{getAuthorName(idea)}</span>
+                  <div>
+                    <h3>{getIdeaTitle(idea)}</h3>
+                    <span className="feed-author">{getAuthorName(idea)}</span>
+                  </div>
                 </div>
+
                 <p>{getIdeaText(idea)}</p>
+
                 <div className="feed-meta">
                   <span>
-                    {Array.isArray(idea?.likes) ? idea.likes.length : idea?.likesCount || 0} likes
+                    {Array.isArray(idea?.likes)
+                      ? idea.likes.length
+                      : idea?.likesCount || 0}{' '}
+                    likes
                   </span>
                   <span>
-                    {Array.isArray(idea?.comments) ? idea.comments.length : idea?.commentsCount || 0} comments
+                    {Array.isArray(idea?.comments)
+                      ? idea.comments.length
+                      : idea?.commentsCount || 0}{' '}
+                    comments
                   </span>
                 </div>
               </article>
@@ -115,6 +152,6 @@ export default function FeedPage() {
           </div>
         )}
       </section>
-    </Layout>
+    </div>
   );
 }

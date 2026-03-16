@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import Layout from '../components/Layout';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
@@ -223,42 +222,68 @@ export default function ProfilePage() {
 
   if (loadingProfile) {
     return (
-      <Layout
-        title={isOwnProfile ? 'Your profile' : 'Profile'}
-        subtitle={isOwnProfile ? 'Build a profile people would want to connect with.' : 'Viewing member profile.'}
-      >
+      <div className="page-stack">
+        <section className="hero-card hero-card--profile">
+          <div className="hero-copy">
+            <span className="hero-eyebrow">
+              {isOwnProfile ? 'Your Profile' : 'Profile'}
+            </span>
+            <h2>{isOwnProfile ? 'Build your profile' : 'Viewing member profile'}</h2>
+            <p>
+              {isOwnProfile
+                ? 'Build a profile people would want to connect with.'
+                : 'Loading member profile details.'}
+            </p>
+          </div>
+        </section>
+
         <section className="card empty-state">
           <div className="empty-state-block">
             <h3>Loading profile...</h3>
             <p>Please wait a moment.</p>
           </div>
         </section>
-      </Layout>
+      </div>
     );
   }
 
   if (!activeProfile) {
     return (
-      <Layout title="Profile" subtitle="Viewing member profile.">
+      <div className="page-stack">
+        <section className="hero-card hero-card--profile">
+          <div className="hero-copy">
+            <span className="hero-eyebrow">Profile</span>
+            <h2>Profile unavailable</h2>
+            <p>This member profile could not be loaded.</p>
+          </div>
+        </section>
+
         <section className="card empty-state">
           <div className="empty-state-block">
             <h3>Profile unavailable</h3>
             <p>{error || 'This profile could not be loaded.'}</p>
           </div>
         </section>
-      </Layout>
+      </div>
     );
   }
 
   return (
-    <Layout
-      title={isOwnProfile ? 'Your profile' : activeProfile.name || 'Profile'}
-      subtitle={
-        isOwnProfile
-          ? 'Build a profile people would want to connect with.'
-          : 'Viewing member profile.'
-      }
-    >
+    <div className="page-stack">
+      <section className="hero-card hero-card--profile">
+        <div className="hero-copy">
+          <span className="hero-eyebrow">
+            {isOwnProfile ? 'Your Profile' : 'Member Profile'}
+          </span>
+          <h2>{isOwnProfile ? 'Build a profile people remember' : activeProfile.name || 'Profile'}</h2>
+          <p>
+            {isOwnProfile
+              ? 'Build a profile people would want to connect with.'
+              : 'Viewing member profile.'}
+          </p>
+        </div>
+      </section>
+
       <section className="sf-profile-page">
         <div className="sf-profile-hero-card">
           <div className="sf-profile-cover" />
@@ -480,6 +505,6 @@ export default function ProfilePage() {
           </section>
         ) : null}
       </section>
-    </Layout>
+    </div>
   );
 }

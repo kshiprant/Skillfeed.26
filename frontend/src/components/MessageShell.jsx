@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 export default function MessageShell({
   conversations,
@@ -12,6 +12,7 @@ export default function MessageShell({
   sendingMessage = false,
 }) {
   const [messageText, setMessageText] = useState('');
+  const messagesEndRef = useRef(null);
 
   const getInitials = (name = 'U') =>
     name
@@ -25,6 +26,15 @@ export default function MessageShell({
     setMessageText('');
   }, [activeConversation?._id]);
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, activeConversation?._id]);
+
+  const safeConversations = useMemo(
+    () => conversations.filter((convo) => convo?.user?._id),
+    [conversations]
+  );
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -36,7 +46,7 @@ export default function MessageShell({
   };
 
   return (
-    <div className="messages-grid">
+    <div className="messages-grid upgraded">
       <section className="card convo-list convo-panel">
         <div className="panel-head">
           <div>
@@ -50,16 +60,14 @@ export default function MessageShell({
             <h4>Loading conversations...</h4>
             <p>Please wait a moment.</p>
           </div>
-        ) : conversations.length === 0 ? (
+        ) : safeConversations.length === 0 ? (
           <div className="empty-state-block compact-empty">
             <h4>No accepted connections yet</h4>
             <p>Connect with people first to unlock messaging.</p>
           </div>
         ) : (
           <div className="conversation-list">
-           {conversations
-  .filter((convo) => convo?.user?._id)
-  .map((convo) => {
+            {safeConversations.map((convo) => {
               const isActive = activeConversation?._id === convo._id;
               const userName = convo.user?.name || 'Unknown user';
               const headline = convo.user?.headline || 'Skillfeed member';
@@ -105,13 +113,12 @@ export default function MessageShell({
                 <div className="conversation-avatar large">
                   {getInitials(activeConversation.user?.name || 'U')}
                 </div>
+
                 <div>
                   <h3>{activeConversation.user?.name || 'Conversation'}</h3>
-                  {activeConversation.user?.headline ? (
-                    <p className="muted">{activeConversation.user.headline}</p>
-                  ) : (
-                    <p className="muted">Skillfeed member</p>
-                  )}
+                  <p className="muted">
+                    {activeConversation.user?.headline || 'Skillfeed member'}
+                  </p>
                 </div>
               </div>
             </div>
@@ -132,19 +139,24 @@ export default function MessageShell({
                   </div>
                 </div>
               ) : (
-                messages.map((msg) => {
-                  const isMe =
-                    String(msg.sender?._id) === String(currentUser?._id);
+                <>
+                  {messages.map((msg) => {
+                    const isMe =
+                      String(msg.sender?._id) === String(currentUser?._id);
 
-                  return (
-                    <div
-                      key={msg._id}
-                      className={`bubble ${isMe ? 'me' : 'them'}`}
-                    >
-                      {msg.text}
-                    </div>
-                  );
-                })
+                    return (
+                      <div
+                        key={msg._id}
+                        className={`message-row ${isMe ? 'me' : 'them'}`}
+                      >
+                        <div className={`bubble ${isMe ? 'me' : 'them'}`}>
+                          {msg.text}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div ref={messagesEndRef} />
+                </>
               )}
             </div>
 
@@ -157,6 +169,7 @@ export default function MessageShell({
                 autoComplete="off"
                 disabled={sendingMessage}
               />
+
               <button
                 type="submit"
                 className="primary-btn chat-send-btn"

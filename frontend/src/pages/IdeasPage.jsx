@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import Layout from '../components/Layout';
 import IdeaCard from '../components/IdeaCard';
 import CommentDrawer from '../components/CommentDrawer';
 import api from '../api/client';
@@ -272,10 +271,18 @@ export default function IdeasPage() {
   };
 
   return (
-    <Layout
-      title="Startup ideas"
-      subtitle="Post what you want to build and discover collaborators."
-    >
+    <div className="page-stack">
+      <section className="hero-card hero-card--ideas">
+        <div className="hero-copy">
+          <span className="hero-eyebrow">Ideas Board</span>
+          <h2>Post what you want to build</h2>
+          <p>
+            Share startup ideas, define the stage, and attract the right
+            collaborators.
+          </p>
+        </div>
+      </section>
+
       <form
         className="card idea-composer idea-composer-upgraded"
         onSubmit={createIdea}
@@ -467,6 +474,6 @@ export default function IdeasPage() {
         onClose={closeCommentsDrawer}
         onCommentAdded={handleDrawerCommentAdded}
       />
-    </Layout>
+    </div>
   );
 }

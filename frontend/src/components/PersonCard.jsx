@@ -22,54 +22,80 @@ export default function PersonCard({ person, onConnect, busy = false }) {
     navigate('/notifications');
   };
 
+  const skills = Array.isArray(person.skills) ? person.skills.slice(0, 5) : [];
+
+  const initials = (person.name || 'U')
+    .split(' ')
+    .map((s) => s[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <article
-      className="card person-card"
+      className="card person-card upgraded"
       onClick={handleCardClick}
       style={{ cursor: 'pointer' }}
     >
-      <div>
-        <h3>{person.name}</h3>
-        <p>{person.headline || person.role || 'Member'}</p>
-        <small>{(person.skills || []).join(' · ') || 'No skills added yet'}</small>
+      <div className="person-card-left">
+        <div className="person-avatar">{initials}</div>
+
+        <div className="person-meta">
+          <h3>{person.name}</h3>
+          <p>{person.headline || person.role || 'Member'}</p>
+
+          {skills.length > 0 ? (
+            <div className="person-skills">
+              {skills.map((skill, index) => (
+                <span key={`${skill}-${index}`} className="person-skill-chip">
+                  {skill}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <small className="muted">No skills added yet</small>
+          )}
+        </div>
       </div>
 
-      {status === 'accepted' ? (
-        <button
-          type="button"
-          className="primary-btn"
-          disabled
-          onClick={(e) => e.stopPropagation()}
-        >
-          Connected
-        </button>
-      ) : status === 'sent' ? (
-        <button
-          type="button"
-          className="primary-btn"
-          disabled
-          onClick={(e) => e.stopPropagation()}
-        >
-          Pending
-        </button>
-      ) : status === 'incoming' ? (
-        <button
-          type="button"
-          className="ghost-btn"
-          onClick={handleAccept}
-        >
-          Respond
-        </button>
-      ) : (
-        <button
-          type="button"
-          className="primary-btn"
-          disabled={busy}
-          onClick={handleConnect}
-        >
-          {busy ? 'Sending...' : 'Connect'}
-        </button>
-      )}
+      <div className="person-card-right">
+        {status === 'accepted' ? (
+          <button
+            type="button"
+            className="primary-btn"
+            disabled
+            onClick={(e) => e.stopPropagation()}
+          >
+            Connected
+          </button>
+        ) : status === 'sent' ? (
+          <button
+            type="button"
+            className="primary-btn"
+            disabled
+            onClick={(e) => e.stopPropagation()}
+          >
+            Pending
+          </button>
+        ) : status === 'incoming' ? (
+          <button
+            type="button"
+            className="ghost-btn"
+            onClick={handleAccept}
+          >
+            Respond
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="primary-btn"
+            disabled={busy}
+            onClick={handleConnect}
+          >
+            {busy ? 'Sending...' : 'Connect'}
+          </button>
+        )}
+      </div>
     </article>
   );
 }

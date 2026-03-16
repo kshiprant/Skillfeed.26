@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import Layout from '../components/Layout';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import MessageShell from '../components/MessageShell';
@@ -235,7 +234,17 @@ export default function MessagesPage() {
   };
 
   return (
-    <Layout title="Messages" subtitle="Only accepted connections can chat.">
+    <div className="page-stack">
+      <section className="hero-card hero-card--messages">
+        <div className="hero-copy">
+          <span className="hero-eyebrow">Messages</span>
+          <h2>Talk to your accepted connections</h2>
+          <p>
+            Conversations unlock after connection requests are accepted.
+          </p>
+        </div>
+      </section>
+
       {error ? <div className="error-box">{error}</div> : null}
 
       <MessageShell
@@ -249,6 +258,6 @@ export default function MessagesPage() {
         loadingMessages={loadingMessages}
         sendingMessage={sendingMessage}
       />
-    </Layout>
+    </div>
   );
-}
+    }

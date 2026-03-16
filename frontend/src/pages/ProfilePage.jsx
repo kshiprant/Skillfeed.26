@@ -248,6 +248,24 @@ export default function ProfilePage() {
 
   return (
     <div className="page-stack">
+      <section className="hero-card hero-card--profile">
+        <div className="hero-copy">
+          <span className="hero-eyebrow">
+            {isOwnProfile ? 'Your Profile' : 'Member Profile'}
+          </span>
+          <h2>
+            {isOwnProfile
+              ? 'Build a profile people remember'
+              : `${activeProfile.name || 'Member'} profile`}
+          </h2>
+          <p>
+            {isOwnProfile
+              ? 'Build a profile people would want to connect with.'
+              : 'Explore this member’s profile, skills, and links.'}
+          </p>
+        </div>
+      </section>
+
       <section className="sf-profile-page">
         <div className="sf-profile-hero-card">
           <div className="sf-profile-cover" />

@@ -3187,3 +3187,16 @@ select:focus {
     max-width:88%;
   }
 }
+/* --- Minimal Topbar Fix --- */
+.minimal-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.brand-link {
+  text-decoration: none;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+}

@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import api from '../api/client';
 
@@ -123,11 +123,7 @@ function BottomNavItem({ to, label, icon, badge = 0 }) {
 }
 
 export default function Layout() {
-  const location = useLocation();
   const [unreadCount, setUnreadCount] = useState(0);
-
-  const hideTopbar =
-    location.pathname === '/profile' || location.pathname.startsWith('/profile/');
 
   useEffect(() => {
     let mounted = true;
@@ -152,14 +148,6 @@ export default function Layout() {
 
   return (
     <div className="app-shell">
-      {!hideTopbar ? (
-        <header className="topbar minimal-topbar">
-          <NavLink to="/feed" className="brand brand-link">
-            Skillfeed
-          </NavLink>
-        </header>
-      ) : null}
-
       <main className="page-content">
         <div className="page-main">
           <Outlet />

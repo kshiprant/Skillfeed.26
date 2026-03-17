@@ -104,8 +104,6 @@ export default function Layout() {
         <header className="topbar">
           <div className="topbar-copy">
             <div className="brand">Skillfeed</div>
-            <h1>Build with the right people</h1>
-            <p>Ideas, collaborators, and conversations in one place.</p>
           </div>
 
           <div className="top-actions">
@@ -137,4 +135,4 @@ export default function Layout() {
       </nav>
     </div>
   );
-      }
+}

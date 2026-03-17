@@ -9,6 +9,7 @@ import rateLimit from 'express-rate-limit';
 import mongoSanitize from 'express-mongo-sanitize';
 import { Server } from 'socket.io';
 import mongoose from 'mongoose';
+import path from 'path';
 
 import connectDB from './config/db.js';
 import User from './models/User.js';
@@ -40,6 +41,8 @@ if (process.env.JWT_SECRET.length < 32) {
 await connectDB();
 
 const app = express();
+app.set('trust proxy', 1);
+
 const httpServer = http.createServer(app);
 
 const allowedOrigins = process.env.CLIENT_URL
@@ -49,7 +52,7 @@ const allowedOrigins = process.env.CLIENT_URL
 
 const corsOptions = {
   origin(origin, callback) {
-    if (!origin) return callback(null, true); // mobile apps / curl / same-origin tools
+    if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
     return callback(new Error('Origin not allowed by CORS'));
   },
@@ -92,6 +95,10 @@ if (process.env.NODE_ENV !== 'production') {
 /* CORS */
 
 app.use(cors(corsOptions));
+
+/* Static uploads */
+
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 /* Socket auth */
 

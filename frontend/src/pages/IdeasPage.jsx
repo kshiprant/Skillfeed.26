@@ -70,8 +70,26 @@ export default function IdeasPage() {
     e.preventDefault();
     setError('');
 
-    if (!form.title.trim() || !form.description.trim()) {
+    const title = form.title.trim();
+    const description = form.description.trim();
+    const lookingFor = form.lookingFor.trim();
+    const tags = form.tags
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    if (!title || !description) {
       setError('Title and description are required.');
+      return;
+    }
+
+    if (title.length < 3) {
+      setError('Title must be at least 3 characters.');
+      return;
+    }
+
+    if (description.length < 10) {
+      setError('Description must be at least 10 characters.');
       return;
     }
 
@@ -79,17 +97,11 @@ export default function IdeasPage() {
       setPosting(true);
 
       const { data: createdIdea } = await api.post('/ideas', {
-        ...form,
-        title: form.title.trim(),
-        description: form.description.trim(),
-        tags: form.tags
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean),
-        lookingFor: form.lookingFor
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean),
+        title,
+        description,
+        stage: form.stage,
+        tags,
+        lookingFor,
       });
 
       setForm(initialForm);
@@ -101,7 +113,7 @@ export default function IdeasPage() {
       }
     } catch (err) {
       console.error('Failed to create idea:', err);
-      setError('Could not post idea.');
+      setError(err.response?.data?.message || 'Could not post idea.');
     } finally {
       setPosting(false);
     }

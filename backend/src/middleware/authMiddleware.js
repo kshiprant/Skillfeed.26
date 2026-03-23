@@ -16,16 +16,15 @@ const protect = async (req, res, next) => {
       return res.status(401).json({ message: 'Not authorized' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
-      issuer: 'skillfeed-api',
-      audience: 'skillfeed-app',
-    });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    if (!decoded?.sub || !mongoose.Types.ObjectId.isValid(decoded.sub)) {
+    const userId = decoded?.sub || decoded?.id || decoded?._id;
+
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(401).json({ message: 'Invalid token payload' });
     }
 
-    const user = await User.findById(decoded.sub)
+    const user = await User.findById(userId)
       .select('_id name email headline avatarUrl role')
       .lean();
 

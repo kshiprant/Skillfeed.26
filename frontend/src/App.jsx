@@ -51,3 +51,11 @@ export default function App() {
     </Routes>
   );
 }
+
+const [ready, setReady] = useState(false);
+
+if (!ready) {
+    return <ServerWakeup onReady={() => setReady(true)} />;
+}
+
+return <Routes />;

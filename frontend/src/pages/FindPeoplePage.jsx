@@ -5,7 +5,12 @@ import api from '../api/client';
 export default function FindPeoplePage() {
   const [query, setQuery] = useState('');
   const [people, setPeople] = useState([]);
-  const [box, setBox] = useState({ incoming: [], sent: [], connections: [] });
+  const [box, setBox] = useState({
+    incoming: [],
+    sent: [],
+    connections: [],
+  });
+
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState('');
   const [error, setError] = useState('');
@@ -21,10 +26,16 @@ export default function FindPeoplePage() {
       ]);
 
       setPeople(Array.isArray(users) ? users : []);
-      setBox(connections || { incoming: [], sent: [], connections: [] });
+      setBox(connections || {
+        incoming: [],
+        sent: [],
+        connections: [],
+      });
     } catch (err) {
       console.error('Failed to load people page:', err);
-      setError(err.response?.data?.message || 'Failed to load people.');
+      setError(
+        err.response?.data?.message || 'Failed to load people.'
+      );
     } finally {
       setLoading(false);
     }
@@ -35,17 +46,32 @@ export default function FindPeoplePage() {
   }, []);
 
   const sentIds = useMemo(
-    () => new Set((box.sent || []).map((item) => String(item.toUser?._id))),
+    () =>
+      new Set(
+        (box.sent || []).map((item) =>
+          String(item.toUser?._id)
+        )
+      ),
     [box.sent]
   );
 
   const incomingIds = useMemo(
-    () => new Set((box.incoming || []).map((item) => String(item.fromUser?._id))),
+    () =>
+      new Set(
+        (box.incoming || []).map((item) =>
+          String(item.fromUser?._id)
+        )
+      ),
     [box.incoming]
   );
 
   const connectedIds = useMemo(
-    () => new Set((box.connections || []).map((item) => String(item.user?._id))),
+    () =>
+      new Set(
+        (box.connections || []).map((item) =>
+          String(item.user?._id)
+        )
+      ),
     [box.connections]
   );
 
@@ -74,25 +100,38 @@ export default function FindPeoplePage() {
     try {
       setActionLoading(String(toUser));
       setError('');
+
       await api.post('/connections', { toUser });
+
       await load(query);
     } catch (err) {
       console.error('Failed to send connection request:', err);
-      setError(err.response?.data?.message || 'Failed to send connection request.');
+      setError(
+        err.response?.data?.message ||
+          'Failed to send connection request.'
+      );
     } finally {
       setActionLoading('');
     }
   };
 
-  const act = async (id, status) => {
+  // ✅ FIXED
+  const act = async (id, action) => {
     try {
       setActionLoading(String(id));
       setError('');
-      await api.patch(`/connections/${id}`, { status });
+
+      await api.patch(`/connections/${id}`, {
+        action,
+      });
+
       await load(query);
     } catch (err) {
       console.error('Failed to update request:', err);
-      setError(err.response?.data?.message || 'Failed to update request.');
+      setError(
+        err.response?.data?.message ||
+          'Failed to update request.'
+      );
     } finally {
       setActionLoading('');
     }
@@ -103,10 +142,12 @@ export default function FindPeoplePage() {
       <section className="hero-card hero-card--people">
         <div className="hero-copy">
           <span className="hero-eyebrow">Network</span>
+
           <h2>Find people by skill, role, or headline</h2>
+
           <p>
-            Search collaborators, review incoming requests, and grow your
-            network on Skillfeed.
+            Search collaborators, review incoming requests,
+            and grow your network on Skillfeed.
           </p>
         </div>
       </section>
@@ -118,6 +159,7 @@ export default function FindPeoplePage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
+
           <button
             className="primary-btn"
             onClick={() => load(query)}
@@ -127,42 +169,69 @@ export default function FindPeoplePage() {
           </button>
         </div>
 
-        {error ? <div className="error-box">{error}</div> : null}
+        {error && (
+          <div className="error-box">
+            {error}
+          </div>
+        )}
       </section>
 
       <section className="card">
         <div className="section-head">
           <div>
             <h3>Incoming requests</h3>
-            <p className="section-sub">People who want to connect with you.</p>
+
+            <p className="section-sub">
+              People who want to connect with you.
+            </p>
           </div>
         </div>
 
         {box.incoming.length === 0 ? (
-          <p className="muted">No incoming requests.</p>
+          <p className="muted">
+            No incoming requests.
+          </p>
         ) : (
           <div className="request-list">
             {box.incoming.map((item) => (
-              <div key={item._id} className="request-row">
+              <div
+                key={item._id}
+                className="request-row"
+              >
                 <div>
-                  <strong>{item.fromUser.name}</strong>
+                  <strong>
+                    {item.fromUser.name}
+                  </strong>
+
                   <p className="muted">
-                    {item.fromUser.headline || 'No headline added yet'}
+                    {item.fromUser.headline ||
+                      'No headline added yet'}
                   </p>
                 </div>
 
                 <div className="row-actions">
                   <button
                     className="primary-btn"
-                    onClick={() => act(item._id, 'accepted')}
-                    disabled={actionLoading === String(item._id)}
+                    onClick={() =>
+                      act(item._id, 'accept')
+                    }
+                    disabled={
+                      actionLoading ===
+                      String(item._id)
+                    }
                   >
                     Accept
                   </button>
+
                   <button
                     className="ghost-btn"
-                    onClick={() => act(item._id, 'rejected')}
-                    disabled={actionLoading === String(item._id)}
+                    onClick={() =>
+                      act(item._id, 'reject')
+                    }
+                    disabled={
+                      actionLoading ===
+                      String(item._id)
+                    }
                   >
                     Reject
                   </button>
@@ -178,7 +247,10 @@ export default function FindPeoplePage() {
           <section className="card empty-state">
             <div className="empty-state-block">
               <h3>No people found</h3>
-              <p>Try a different search term.</p>
+
+              <p>
+                Try a different search term.
+              </p>
             </div>
           </section>
         ) : (
@@ -187,7 +259,10 @@ export default function FindPeoplePage() {
               key={person._id}
               person={person}
               onConnect={connect}
-              busy={actionLoading === String(person._id)}
+              busy={
+                actionLoading ===
+                String(person._id)
+              }
             />
           ))
         )}
